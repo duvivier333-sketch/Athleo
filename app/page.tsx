@@ -5,6 +5,7 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import NutritionPage from './components/NutritionPage';
 import ProgressionPage from './components/ProgressionPage';
+import CoachPage from './components/CoachPage';
 
 type Section = 'today' | 'training' | 'nutrition' | 'progress' | 'coach' | 'boost';
 type AuthMode = 'signup' | 'login';
@@ -20,9 +21,8 @@ const navItems: NavItem[] = [
   { id: 'boost', label: 'Boost', icon: 'boost' },
 ];
 
-const sectionMeta: Record<Exclude<Section, 'today' | 'nutrition' | 'progress'>, { eyebrow: string; title: string; text: string }> = {
+const sectionMeta: Record<Exclude<Section, 'today' | 'nutrition' | 'progress' | 'coach'>, { eyebrow: string; title: string; text: string }> = {
   training: { eyebrow: 'ENTRAÎNEMENT', title: 'Ton entraînement', text: 'Programmes, séances, exercices et suivi de performance seront regroupés ici.' },
-  coach: { eyebrow: 'COACH IA', title: 'Ton coach ATHLEO', text: 'Conseils, synthèses et recommandations personnalisées seront regroupés ici.' },
   boost: { eyebrow: 'BOOST', title: 'Tes boosts', text: 'Supplémentation, prises du jour et protocoles seront regroupés ici.' },
 };
 
@@ -98,7 +98,8 @@ export default function Page() {
         {section === 'today' && <TodayHome userName={profile.firstName} onNavigate={setSection} />}
         {section === 'nutrition' && <NutritionPage />}
         {section === 'progress' && <ProgressionPage />}
-        {section !== 'today' && section !== 'nutrition' && section !== 'progress' && <SectionPlaceholder section={section} />}
+        {section === 'coach' && <CoachPage userName={profile.firstName} />}
+        {section !== 'today' && section !== 'nutrition' && section !== 'progress' && section !== 'coach' && <SectionPlaceholder section={section} />}
       </section>
     </main>
   );
@@ -237,7 +238,7 @@ function Activity({ label, value, target, progress, done }: { label: string; val
   return <div className="activity-row"><div className="activity-line"><span>{label}</span><b>{value} <small>/ {target}</small>{done && <em>✓</em>}</b></div><div className="activity-progress"><span style={{ width: `${progress}%` }} /></div></div>;
 }
 
-function SectionPlaceholder({ section }: { section: Exclude<Section, 'today' | 'nutrition' | 'progress'> }) {
+function SectionPlaceholder({ section }: { section: Exclude<Section, 'today' | 'nutrition' | 'progress' | 'coach'> }) {
   const data = sectionMeta[section];
   return <div className="placeholder-page"><p className="overline">{data.eyebrow}</p><h1>{data.title}<span>.</span></h1><p>{data.text}</p><div className="placeholder-card"><div className="placeholder-icon"><Icon name={navItems.find(i => i.id === section)?.icon || 'home'} /></div><div><b>Section prête</b><span>Envoie-moi les éléments de cet onglet et je construirai son contenu ici sans modifier la structure générale d’Athleo.</span></div></div></div>;
 }
