@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import './auth.css';
 import './nutrition.css';
+import './progression.css';
 
 export const metadata: Metadata = {
   title: 'Athleo',
