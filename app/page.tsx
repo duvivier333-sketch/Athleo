@@ -1,8 +1,9 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, ReactNode, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import NutritionPage from './components/NutritionPage';
 
 type Section = 'today' | 'training' | 'nutrition' | 'progress' | 'coach' | 'boost';
 type AuthMode = 'signup' | 'login';
@@ -18,21 +19,15 @@ const navItems: NavItem[] = [
   { id: 'boost', label: 'Boost', icon: 'boost' },
 ];
 
-const sectionMeta: Record<Exclude<Section, 'today'>, { eyebrow: string; title: string; text: string }> = {
+const sectionMeta: Record<Exclude<Section, 'today' | 'nutrition'>, { eyebrow: string; title: string; text: string }> = {
   training: { eyebrow: 'ENTRAÎNEMENT', title: 'Ton entraînement', text: 'Programmes, séances, exercices et suivi de performance seront regroupés ici.' },
-  nutrition: { eyebrow: 'NUTRITION', title: 'Ta nutrition', text: 'Objectifs, repas, calories et macronutriments seront regroupés ici.' },
   progress: { eyebrow: 'PROGRESSION', title: 'Ta progression', text: 'Évolution du poids, mensurations, performances et photos seront regroupées ici.' },
   coach: { eyebrow: 'COACH IA', title: 'Ton coach ATHLEO', text: 'Conseils, synthèses et recommandations personnalisées seront regroupés ici.' },
   boost: { eyebrow: 'BOOST', title: 'Tes boosts', text: 'Supplémentation, prises du jour et protocoles seront regroupés ici.' },
 };
 
 async function loadProfile(user: User): Promise<UserProfile> {
-  const { data } = await supabase
-    .from('profiles')
-    .select('id, first_name, last_name, email')
-    .eq('id', user.id)
-    .maybeSingle();
-
+  const { data } = await supabase.from('profiles').select('id, first_name, last_name, email').eq('id', user.id).maybeSingle();
   return {
     id: user.id,
     firstName: data?.first_name || user.user_metadata?.first_name || '',
@@ -52,14 +47,11 @@ export default function Page() {
 
     async function restoreSession() {
       const { data } = await supabase.auth.getSession();
-      if (data.session?.user && active) {
-        setProfile(await loadProfile(data.session.user));
-      }
+      if (data.session?.user && active) setProfile(await loadProfile(data.session.user));
       if (active) setCheckingSession(false);
     }
 
     restoreSession();
-
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!active) return;
       if (session?.user) setProfile(await loadProfile(session.user));
@@ -103,7 +95,9 @@ export default function Page() {
           </div>
         </header>
 
-        {section === 'today' ? <TodayHome userName={profile.firstName} onNavigate={setSection} /> : <SectionPlaceholder section={section} />}
+        {section === 'today' && <TodayHome userName={profile.firstName} onNavigate={setSection} />}
+        {section === 'nutrition' && <NutritionPage />}
+        {section !== 'today' && section !== 'nutrition' && <SectionPlaceholder section={section} />}
       </section>
     </main>
   );
@@ -124,7 +118,6 @@ function AuthScreen({ onAuthenticated }: { onAuthenticated: (profile: UserProfil
     setError('');
     setInfo('');
     setLoading(true);
-
     try {
       const cleanEmail = email.trim().toLowerCase();
       if (!cleanEmail || !cleanEmail.includes('@')) throw new Error('Renseigne une adresse e-mail valide.');
@@ -132,33 +125,20 @@ function AuthScreen({ onAuthenticated }: { onAuthenticated: (profile: UserProfil
 
       if (mode === 'signup') {
         if (!firstName.trim() || !lastName.trim()) throw new Error('Renseigne ton nom et ton prénom.');
-
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: cleanEmail,
           password,
-          options: {
-            data: {
-              first_name: firstName.trim(),
-              last_name: lastName.trim(),
-            },
-          },
+          options: { data: { first_name: firstName.trim(), last_name: lastName.trim() } },
         });
-
         if (signUpError) throw signUpError;
-
-        if (data.session?.user) {
-          onAuthenticated(await loadProfile(data.session.user));
-        } else {
+        if (data.session?.user) onAuthenticated(await loadProfile(data.session.user));
+        else {
           setInfo('Compte créé. Vérifie ton e-mail pour confirmer ton adresse, puis connecte-toi.');
           setMode('login');
           setPassword('');
         }
       } else {
-        const { data, error: loginError } = await supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password,
-        });
-
+        const { data, error: loginError } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (loginError) throw new Error('E-mail ou mot de passe incorrect.');
         if (!data.user) throw new Error('Impossible de récupérer ton compte.');
         onAuthenticated(await loadProfile(data.user));
@@ -187,34 +167,25 @@ function AuthScreen({ onAuthenticated }: { onAuthenticated: (profile: UserProfil
           <p>Entraînement, nutrition et suivi réunis dans une expérience personnalisée.</p>
         </div>
       </section>
-
       <section className="auth-form-panel">
         <div className="auth-card">
           <div className="auth-tabs">
             <button className={mode === 'signup' ? 'active' : ''} onClick={() => switchMode('signup')}>Créer un compte</button>
             <button className={mode === 'login' ? 'active' : ''} onClick={() => switchMode('login')}>Se connecter</button>
           </div>
-
           <div className="auth-heading">
             <p>{mode === 'signup' ? 'BIENVENUE CHEZ ATHLEO' : 'BON RETOUR'}</p>
             <h2>{mode === 'signup' ? 'Créons ton espace.' : 'Retrouve ton espace.'}</h2>
             <span>{mode === 'signup' ? 'Quelques informations suffisent pour personnaliser ton expérience.' : 'Connecte-toi avec les informations de ton compte.'}</span>
           </div>
-
           <form onSubmit={submit} className="auth-form">
-            {mode === 'signup' && (
-              <div className="auth-name-grid">
-                <label>Prénom<input value={firstName} onChange={e => setFirstName(e.target.value)} autoComplete="given-name" placeholder="Gwendal" /></label>
-                <label>Nom<input value={lastName} onChange={e => setLastName(e.target.value)} autoComplete="family-name" placeholder="Duvivier" /></label>
-              </div>
-            )}
+            {mode === 'signup' && <div className="auth-name-grid"><label>Prénom<input value={firstName} onChange={e => setFirstName(e.target.value)} autoComplete="given-name" placeholder="Gwendal" /></label><label>Nom<input value={lastName} onChange={e => setLastName(e.target.value)} autoComplete="family-name" placeholder="Duvivier" /></label></div>}
             <label>Adresse e-mail<input type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" placeholder="nom@exemple.fr" /></label>
             <label>Mot de passe<input type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} placeholder="8 caractères minimum" /></label>
             {error && <p className="auth-error">{error}</p>}
             {info && <p className="auth-info">{info}</p>}
             <button className="auth-submit" type="submit" disabled={loading}>{loading ? 'Chargement…' : mode === 'signup' ? 'Créer mon compte' : 'Me connecter'} <span>→</span></button>
           </form>
-
           <p className="auth-note">Ton compte ATHLEO est sécurisé et reconnu sur tes différents appareils.</p>
         </div>
       </section>
@@ -225,13 +196,9 @@ function AuthScreen({ onAuthenticated }: { onAuthenticated: (profile: UserProfil
 function Sidebar({ active, onChange }: { active: Section; onChange: (value: Section) => void }) {
   return (
     <aside className="sidebar">
-      <button className="brand" onClick={() => onChange('today')} aria-label="Retour à l’accueil">
-        <span className="brand-mark"><span>A</span></span><strong>ATHLEO</strong>
-      </button>
+      <button className="brand" onClick={() => onChange('today')} aria-label="Retour à l’accueil"><span className="brand-mark"><span>A</span></span><strong>ATHLEO</strong></button>
       <p className="sidebar-label">TON ESPACE</p>
-      <nav className="nav-list">
-        {navItems.map(item => <button key={item.id} className={active === item.id ? 'nav-item active' : 'nav-item'} onClick={() => onChange(item.id)}><Icon name={item.icon} /><span>{item.label}</span></button>)}
-      </nav>
+      <nav className="nav-list">{navItems.map(item => <button key={item.id} className={active === item.id ? 'nav-item active' : 'nav-item'} onClick={() => onChange(item.id)}><Icon name={item.icon} /><span>{item.label}</span></button>)}</nav>
       <div className="sidebar-signature"><div className="signature-a">A</div><p>La méthode au service<br />de ton physique.</p></div>
     </aside>
   );
@@ -240,16 +207,8 @@ function Sidebar({ active, onChange }: { active: Section; onChange: (value: Sect
 function TodayHome({ userName, onNavigate }: { userName: string; onNavigate: (value: Section) => void }) {
   return (
     <div className="page-content">
-      <div className="page-intro">
-        <div><p className="overline">CHAQUE JOUR COMPTE</p><h1>Bonjour {userName}<span>.</span></h1><p className="intro-copy">Ton cap, tes repères, ta journée.</p></div>
-        <button className="date-switcher"><span>‹</span><b>Aujourd’hui · 19 sept.</b><span>›</span></button>
-      </div>
-
-      <section className="goal-card">
-        <div className="goal-main"><p className="goal-label">MON CAP</p><h2>Construire avec méthode.</h2><p className="goal-program">Prise de masse · Semaine 3 sur 12</p><div className="goal-progress"><span style={{ width: '25%' }} /></div><div className="goal-footer"><small>Un bloc. Des repères. Une progression.</small><button>Voir mon parcours <span>→</span></button></div></div>
-        <div className="goal-deadline"><div className="calendar-icon">▢</div><p>PROCHAINE ÉCHÉANCE</p><h3>Shooting</h3><span>Dans 12 semaines</span></div>
-      </section>
-
+      <div className="page-intro"><div><p className="overline">CHAQUE JOUR COMPTE</p><h1>Bonjour {userName}<span>.</span></h1><p className="intro-copy">Ton cap, tes repères, ta journée.</p></div><button className="date-switcher"><span>‹</span><b>Aujourd’hui · 19 sept.</b><span>›</span></button></div>
+      <section className="goal-card"><div className="goal-main"><p className="goal-label">MON CAP</p><h2>Construire avec méthode.</h2><p className="goal-program">Prise de masse · Semaine 3 sur 12</p><div className="goal-progress"><span style={{ width: '25%' }} /></div><div className="goal-footer"><small>Un bloc. Des repères. Une progression.</small><button>Voir mon parcours <span>→</span></button></div></div><div className="goal-deadline"><div className="calendar-icon">▢</div><p>PROCHAINE ÉCHÉANCE</p><h3>Shooting</h3><span>Dans 12 semaines</span></div></section>
       <div className="dashboard-grid">
         <section className="essential-column">
           <div className="section-heading"><h2>L’essentiel du jour</h2><span>0 / 2 actions renseignées</span></div>
@@ -269,7 +228,27 @@ function TodayHome({ userName, onNavigate }: { userName: string; onNavigate: (va
   );
 }
 
-function Macro({ label, value, target, progress, tone }: { label: string; value: string; target: string; progress: number; tone: string }) { return <div className="macro"><span>{label}</span><b>{value} <small>/ {target}</small></b><div className={`macro-bar ${tone}`}><span style={{ width: `${progress}%` }} /></div></div>; }
-function Activity({ label, value, target, progress, done }: { label: string; value: string; target: string; progress: number; done?: boolean }) { return <div className="activity-row"><div className="activity-line"><span>{label}</span><b>{value} <small>/ {target}</small>{done && <em>✓</em>}</b></div><div className="activity-progress"><span style={{ width: `${progress}%` }} /></div></div>; }
-function SectionPlaceholder({ section }: { section: Exclude<Section, 'today'> }) { const data = sectionMeta[section]; return <div className="placeholder-page"><p className="overline">{data.eyebrow}</p><h1>{data.title}<span>.</span></h1><p>{data.text}</p><div className="placeholder-card"><div className="placeholder-icon"><Icon name={navItems.find(i => i.id === section)?.icon || 'home'} /></div><div><b>Section prête</b><span>Envoie-moi les éléments de cet onglet et je construirai son contenu ici sans modifier la structure générale d’Athleo.</span></div></div></div>; }
-function Icon({ name }: { name: string }) { const paths: Record<string, React.ReactNode> = { home: <><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></>, training: <><path d="M5 8v8M8 6v12M16 6v12M19 8v8M8 12h8"/></>, nutrition: <><path d="M6 4v7M3.5 4v4c0 2 1 3 2.5 3s2.5-1 2.5-3V4M6 11v9M15 4v16M19 4c-3 1-4 4-4 7h4z"/></>, progress: <><path d="M4 19V5"/><path d="M4 19h16"/><path d="m7 15 4-5 3 2 5-6"/></>, coach: <><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></>, boost: <><path d="M8 4a4 4 0 0 1 0 8l-1.5 1.5a4 4 0 0 1-5.5-5.5L6 3a4 4 0 0 1 5.5 5.5L8 12" transform="translate(5 2) scale(.7)"/></>, }; return <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>; }
+function Macro({ label, value, target, progress, tone }: { label: string; value: string; target: string; progress: number; tone: string }) {
+  return <div className="macro"><span>{label}</span><b>{value} <small>/ {target}</small></b><div className={`macro-bar ${tone}`}><span style={{ width: `${progress}%` }} /></div></div>;
+}
+
+function Activity({ label, value, target, progress, done }: { label: string; value: string; target: string; progress: number; done?: boolean }) {
+  return <div className="activity-row"><div className="activity-line"><span>{label}</span><b>{value} <small>/ {target}</small>{done && <em>✓</em>}</b></div><div className="activity-progress"><span style={{ width: `${progress}%` }} /></div></div>;
+}
+
+function SectionPlaceholder({ section }: { section: Exclude<Section, 'today' | 'nutrition'> }) {
+  const data = sectionMeta[section];
+  return <div className="placeholder-page"><p className="overline">{data.eyebrow}</p><h1>{data.title}<span>.</span></h1><p>{data.text}</p><div className="placeholder-card"><div className="placeholder-icon"><Icon name={navItems.find(i => i.id === section)?.icon || 'home'} /></div><div><b>Section prête</b><span>Envoie-moi les éléments de cet onglet et je construirai son contenu ici sans modifier la structure générale d’Athleo.</span></div></div></div>;
+}
+
+function Icon({ name }: { name: string }) {
+  const paths: Record<string, ReactNode> = {
+    home: <><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></>,
+    training: <><path d="M5 8v8M8 6v12M16 6v12M19 8v8M8 12h8"/></>,
+    nutrition: <><path d="M6 4v7M3.5 4v4c0 2 1 3 2.5 3s2.5-1 2.5-3V4M6 11v9M15 4v16M19 4c-3 1-4 4-4 7h4z"/></>,
+    progress: <><path d="M4 19V5"/><path d="M4 19h16"/><path d="m7 15 4-5 3 2 5-6"/></>,
+    coach: <><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></>,
+    boost: <><path d="M8 4a4 4 0 0 1 0 8l-1.5 1.5a4 4 0 0 1-5.5-5.5L6 3a4 4 0 0 1 5.5 5.5L8 12" transform="translate(5 2) scale(.7)"/></>,
+  };
+  return <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
+}
