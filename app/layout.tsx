@@ -3,6 +3,7 @@ import './globals.css';
 import './auth.css';
 import './nutrition.css';
 import './progression.css';
+import './coach.css';
 
 export const metadata: Metadata = {
   title: 'Athleo',
