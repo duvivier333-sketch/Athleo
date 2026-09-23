@@ -1,11 +1,13 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import type { User } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 
 type Section = 'today' | 'training' | 'nutrition' | 'progress' | 'coach' | 'boost';
 type AuthMode = 'signup' | 'login';
 type NavItem = { id: Section; label: string; icon: string };
-type UserProfile = { firstName: string; lastName: string; email: string; passwordHash: string };
+type UserProfile = { id: string; firstName: string; lastName: string; email: string };
 
 const navItems: NavItem[] = [
   { id: 'today', label: "Aujourd’hui", icon: 'home' },
@@ -24,10 +26,19 @@ const sectionMeta: Record<Exclude<Section, 'today'>, { eyebrow: string; title: s
   boost: { eyebrow: 'BOOST', title: 'Tes boosts', text: 'Supplémentation, prises du jour et protocoles seront regroupés ici.' },
 };
 
-async function hashPassword(value: string) {
-  const data = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(digest)).map(byte => byte.toString(16).padStart(2, '0')).join('');
+async function loadProfile(user: User): Promise<UserProfile> {
+  const { data } = await supabase
+    .from('profiles')
+    .select('id, first_name, last_name, email')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  return {
+    id: user.id,
+    firstName: data?.first_name || user.user_metadata?.first_name || '',
+    lastName: data?.last_name || user.user_metadata?.last_name || '',
+    email: data?.email || user.email || '',
+  };
 }
 
 export default function Page() {
@@ -37,19 +48,33 @@ export default function Page() {
   const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
-    try {
-      const rawUser = localStorage.getItem('athleo:user');
-      const sessionEmail = localStorage.getItem('athleo:session');
-      if (rawUser && sessionEmail) {
-        const saved = JSON.parse(rawUser) as UserProfile;
-        if (saved.email === sessionEmail) setProfile(saved);
+    let active = true;
+
+    async function restoreSession() {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user && active) {
+        setProfile(await loadProfile(data.session.user));
       }
-    } catch {}
-    setCheckingSession(false);
+      if (active) setCheckingSession(false);
+    }
+
+    restoreSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!active) return;
+      if (session?.user) setProfile(await loadProfile(session.user));
+      else setProfile(null);
+      setCheckingSession(false);
+    });
+
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
-  function signOut() {
-    localStorage.removeItem('athleo:session');
+  async function signOut() {
+    await supabase.auth.signOut();
     setProfile(null);
     setProfileOpen(false);
     setSection('today');
@@ -58,7 +83,7 @@ export default function Page() {
   if (checkingSession) return <div className="auth-loading">ATHLEO</div>;
   if (!profile) return <AuthScreen onAuthenticated={setProfile} />;
 
-  const initials = `${profile.firstName[0] || ''}${profile.lastName[0] || ''}`.toUpperCase();
+  const initials = `${profile.firstName[0] || ''}${profile.lastName[0] || ''}`.toUpperCase() || 'A';
 
   return (
     <main className="app">
@@ -91,36 +116,52 @@ function AuthScreen({ onAuthenticated }: { onAuthenticated: (profile: UserProfil
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError('');
+    setInfo('');
     setLoading(true);
+
     try {
       const cleanEmail = email.trim().toLowerCase();
       if (!cleanEmail || !cleanEmail.includes('@')) throw new Error('Renseigne une adresse e-mail valide.');
       if (password.length < 8) throw new Error('Le mot de passe doit contenir au moins 8 caractères.');
-      const passwordHash = await hashPassword(password);
 
       if (mode === 'signup') {
         if (!firstName.trim() || !lastName.trim()) throw new Error('Renseigne ton nom et ton prénom.');
-        const profile: UserProfile = {
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
+
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email: cleanEmail,
-          passwordHash,
-        };
-        localStorage.setItem('athleo:user', JSON.stringify(profile));
-        localStorage.setItem('athleo:session', profile.email);
-        onAuthenticated(profile);
+          password,
+          options: {
+            data: {
+              first_name: firstName.trim(),
+              last_name: lastName.trim(),
+            },
+          },
+        });
+
+        if (signUpError) throw signUpError;
+
+        if (data.session?.user) {
+          onAuthenticated(await loadProfile(data.session.user));
+        } else {
+          setInfo('Compte créé. Vérifie ton e-mail pour confirmer ton adresse, puis connecte-toi.');
+          setMode('login');
+          setPassword('');
+        }
       } else {
-        const raw = localStorage.getItem('athleo:user');
-        if (!raw) throw new Error('Aucun compte enregistré sur cet appareil.');
-        const saved = JSON.parse(raw) as UserProfile;
-        if (saved.email !== cleanEmail || saved.passwordHash !== passwordHash) throw new Error('E-mail ou mot de passe incorrect.');
-        localStorage.setItem('athleo:session', saved.email);
-        onAuthenticated(saved);
+        const { data, error: loginError } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password,
+        });
+
+        if (loginError) throw new Error('E-mail ou mot de passe incorrect.');
+        if (!data.user) throw new Error('Impossible de récupérer ton compte.');
+        onAuthenticated(await loadProfile(data.user));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue.');
@@ -132,6 +173,7 @@ function AuthScreen({ onAuthenticated }: { onAuthenticated: (profile: UserProfil
   function switchMode(next: AuthMode) {
     setMode(next);
     setError('');
+    setInfo('');
     setPassword('');
   }
 
@@ -169,10 +211,11 @@ function AuthScreen({ onAuthenticated }: { onAuthenticated: (profile: UserProfil
             <label>Adresse e-mail<input type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" placeholder="nom@exemple.fr" /></label>
             <label>Mot de passe<input type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} placeholder="8 caractères minimum" /></label>
             {error && <p className="auth-error">{error}</p>}
+            {info && <p className="auth-info">{info}</p>}
             <button className="auth-submit" type="submit" disabled={loading}>{loading ? 'Chargement…' : mode === 'signup' ? 'Créer mon compte' : 'Me connecter'} <span>→</span></button>
           </form>
 
-          <p className="auth-note">Tes informations sont utilisées pour personnaliser ton espace ATHLEO sur cet appareil.</p>
+          <p className="auth-note">Ton compte ATHLEO est sécurisé et reconnu sur tes différents appareils.</p>
         </div>
       </section>
     </main>
