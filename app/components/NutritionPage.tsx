@@ -79,6 +79,12 @@ export default function NutritionPage() {
     setMeals(current => current.map(meal => meal.id === mealId ? { ...meal, foods: meal.foods.filter(food => food.id !== foodId) } : meal));
   }
 
+  function removeMeal(mealId: number) {
+    setMeals(current => current
+      .filter(meal => meal.id !== mealId)
+      .map((meal, index) => ({ ...meal, title: `Repas ${index + 1}` })));
+  }
+
   function addMeal() {
     setMeals(current => [...current, { id: Date.now(), title: `Repas ${current.length + 1}`, foods: [] }]);
   }
@@ -118,7 +124,10 @@ export default function NutritionPage() {
                       <h3>{meal.title}</h3>
                       <p>{sum.kcal} kcal · P {sum.protein} · G {sum.carbs} · L {sum.fat}</p>
                     </div>
-                    <button>+ Ajouter un aliment</button>
+                    <div className="nutrition-meal-actions">
+                      <button>+ Ajouter un aliment</button>
+                      <button className="nutrition-delete-meal" onClick={() => removeMeal(meal.id)} aria-label={`Supprimer ${meal.title}`}>Supprimer le repas</button>
+                    </div>
                   </div>
 
                   {meal.foods.length > 0 ? (
