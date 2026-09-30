@@ -102,7 +102,7 @@ export default function Page() {
           </header>
         )}
 
-        {section === 'today' && <TodayDashboard onNavigate={setSection} profileControl={profileControl} />}
+        {section === 'today' && <TodayDashboard userName={profile.firstName} onNavigate={setSection} profileControl={profileControl} />}
         {section === 'nutrition' && <NutritionPage />}
         {section === 'progress' && <ProgressionPage />}
         {section === 'coach' && <CoachPage userName={profile.firstName} />}
