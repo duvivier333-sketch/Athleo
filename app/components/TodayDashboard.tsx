@@ -46,6 +46,25 @@ function getWeek() {
   });
 }
 
+function formatProgressDate(value: string) {
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(`${value}T12:00:00Z`));
+}
+
+function getWeightDeltaLabel(items: ProgressPhotoEntry[]) {
+  if (items.length < 2) return null;
+  const firstWeight = items[0].weight_kg;
+  const lastWeight = items[1].weight_kg;
+  if (firstWeight === null || lastWeight === null) return null;
+  const delta = lastWeight - firstWeight;
+  const formatted = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Math.abs(delta));
+  return `${delta >= 0 ? '+' : '-'}${formatted} kg`;
+}
+
 export default function TodayDashboard({
   userName,
   onNavigate,
@@ -65,10 +84,12 @@ export default function TodayDashboard({
     return () => { active = false; };
   }, []);
 
+  const weightDeltaLabel = getWeightDeltaLabel(photoHighlights);
+
   return (
     <div className="ref-home">
       <header className="ref-home-header ref-home-header-minimal">
-        <div>
+        <div className="ref-home-greeting">
           <h1>Bonjour <span>{userName}</span>.</h1>
         </div>
         <div className="ref-home-meta">
@@ -79,7 +100,42 @@ export default function TodayDashboard({
         </div>
       </header>
 
-      <section className="ref-hero">
+      <section className="ref-photo-comparison ref-photo-comparison-prominent">
+        <div className="ref-photo-comparison-heading">
+          <div>
+            <p className="ref-photo-eyebrow">ÉVOLUTION PHYSIQUE EN PHOTOS</p>
+            <h2>Transphormation</h2>
+          </div>
+          {weightDeltaLabel && <strong className="ref-photo-delta">{weightDeltaLabel}</strong>}
+        </div>
+
+        {photoHighlights.length === 0 ? (
+          <button className="ref-photo-empty" type="button" onClick={() => onNavigate('progress')}>
+            <b>Ajoute tes premières photos</b>
+            <span>Tu retrouveras ici ton avant / après et l’écart de poids entre les deux repères.</span>
+          </button>
+        ) : (
+          <div className="ref-photo-comparison-grid">
+            <figure>
+              <img src={photoHighlights[0].imageUrl} alt="Première photo de progression" />
+              <figcaption><span>Début</span><time>{formatProgressDate(photoHighlights[0].measured_at)}</time></figcaption>
+            </figure>
+            {photoHighlights.length > 1 ? (
+              <figure>
+                <img src={photoHighlights[1].imageUrl} alt="Dernière photo de progression" />
+                <figcaption><span>Maintenant</span><time>{formatProgressDate(photoHighlights[1].measured_at)}</time></figcaption>
+              </figure>
+            ) : (
+              <button className="ref-photo-next-step" type="button" onClick={() => onNavigate('progress')}>
+                <b>Ajoute une deuxième photo</b>
+                <span>Elle apparaîtra ici pour visualiser ta transphormation.</span>
+              </button>
+            )}
+          </div>
+        )}
+      </section>
+
+      <section className="ref-hero ref-hero-after-photos">
         <div className="ref-hero-copy">
           <p className="ref-kicker">TON OBJECTIF</p>
           <h2>Plus fort,<br />plus régulier.</h2>
@@ -91,14 +147,6 @@ export default function TodayDashboard({
           <Image src="/athleo-hero-reference.jpg" alt="" fill priority sizes="(max-width: 820px) 100vw, 55vw" />
         </div>
       </section>
-
-      {photoHighlights.length > 0 && <section className="ref-photo-comparison">
-        <div className="ref-photo-comparison-heading"><div><h2>Mon évolution en photos</h2><p>Premier repère et dernière photo enregistrée.</p></div><span>{photoHighlights.length === 1 ? '1 photo' : 'Comparaison'}</span></div>
-        <div className="ref-photo-comparison-grid">
-          <figure><img src={photoHighlights[0].imageUrl} alt="Première photo de progression" /><figcaption><span>Début</span><time>{new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${photoHighlights[0].measured_at}T12:00:00Z`))}</time></figcaption></figure>
-          {photoHighlights.length > 1 ? <figure><img src={photoHighlights[1].imageUrl} alt="Dernière photo de progression" /><figcaption><span>Dernière photo</span><time>{new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${photoHighlights[1].measured_at}T12:00:00Z`))}</time></figcaption></figure> : <div className="ref-photo-next-step"><b>La suite arrive ici.</b><span>Ajoute une nouvelle photo dans Progression pour comparer ton évolution.</span></div>}
-        </div>
-      </section>}
 
       <section className="ref-priority-section">
         <div className="ref-section-title"><h2>Aujourd’hui</h2><span>Tes priorités du jour.</span></div>
