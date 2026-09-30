@@ -1,0 +1,71 @@
+:root{
+  --athleo-ivory:#F8EDE0;
+  --athleo-red:#8B1E25;
+  --athleo-white:#FFFFFF;
+  --athleo-ink:#0E0E0F;
+}
+
+html,body,.app,.workspace{
+  background:var(--athleo-ivory)!important;
+}
+
+body{
+  background-image:none!important;
+}
+
+.page-content{
+  background:transparent;
+}
+
+.page-intro h1{
+  color:var(--athleo-ink)!important;
+}
+
+.page-intro h1 .user-name{
+  color:var(--athleo-red)!important;
+}
+
+.page-intro h1 .greeting-dot{
+  color:var(--athleo-ink)!important;
+}
+
+.nutrition-page-shell,
+.progress-page,
+.coach-page-view,
+.placeholder-page{
+  background:var(--athleo-white)!important;
+  border-radius:24px;
+  box-shadow:0 10px 34px rgba(45,30,20,.045);
+}
+
+.nutrition-page-shell{
+  margin-top:24px;
+  padding:42px 36px 32px!important;
+}
+
+.progress-page{
+  margin-top:24px;
+  padding:38px 36px 70px!important;
+}
+
+.coach-page-view{
+  margin-top:24px!important;
+  padding:38px 36px 64px!important;
+}
+
+.placeholder-page{
+  margin-top:24px;
+  padding:48px 36px 56px!important;
+  max-width:none!important;
+}
+
+@media(max-width:820px){
+  .nutrition-page-shell,
+  .progress-page,
+  .coach-page-view,
+  .placeholder-page{
+    border-radius:18px;
+    margin-top:16px!important;
+    padding:26px 18px 96px!important;
+  }
+}
