@@ -1,19 +1,58 @@
 'use client';
 
-import type { ReactNode } from 'react';
-import { demoProgressPhoto } from './demoProgressPhoto';
+import { useEffect, useState, type ReactNode } from 'react';
+import Image from 'next/image';
+import { loadProgressPhotoHighlights, ProgressPhotoEntry } from '../../lib/progressPhotos';
 
 type Section = 'today' | 'training' | 'nutrition' | 'progress' | 'coach' | 'boost';
 
-const week = [
-  { day: 'Lun', date: '22', label: 'Entraînement', meta: '2 654 kcal', done: true },
-  { day: 'Mar', date: '23', label: 'Entraînement', meta: '2 312 kcal', done: true },
-  { day: 'Mer', date: '24', label: 'Upper B', meta: '2 104 kcal', active: true },
-  { day: 'Jeu', date: '25', label: 'Repos', meta: '' },
-  { day: 'Ven', date: '26', label: 'Entraînement', meta: '' },
-  { day: 'Sam', date: '27', label: 'Entraînement', meta: '' },
-  { day: 'Dim', date: '28', label: 'Repos', meta: '' },
+const weekPlan = [
+  { label: 'Entraînement' },
+  { label: 'Entraînement' },
+  { label: 'Upper B' },
+  { label: 'Repos' },
+  { label: 'Entraînement' },
+  { label: 'Entraînement' },
+  { label: 'Repos' },
 ];
+
+function getParisDateParts() {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Paris',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  return Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+}
+
+function getWeek() {
+  const parts = getParisDateParts();
+  const today = new Date(Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day)));
+  const todayIndex = (today.getUTCDay() + 6) % 7;
+  const monday = new Date(today);
+  monday.setUTCDate(today.getUTCDate() - todayIndex);
+
+  return weekPlan.map((item, index) => {
+    const date = new Date(monday);
+    date.setUTCDate(monday.getUTCDate() + index);
+    return {
+      ...item,
+      day: new Intl.DateTimeFormat('fr-FR', { weekday: 'short', timeZone: 'UTC' }).format(date).replace('.', ''),
+      date: date.getUTCDate(),
+      active: index === todayIndex,
+      done: index < todayIndex,
+    };
+  });
+}
+
+const todayLabel = new Intl.DateTimeFormat('fr-FR', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'Europe/Paris',
+}).format(new Date());
 
 export default function TodayDashboard({
   userName,
@@ -24,6 +63,16 @@ export default function TodayDashboard({
   onNavigate: (value: Section) => void;
   profileControl: ReactNode;
 }) {
+  const [photoHighlights, setPhotoHighlights] = useState<ProgressPhotoEntry[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    loadProgressPhotoHighlights()
+      .then(items => { if (active) setPhotoHighlights(items); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+
   return (
     <div className="ref-home">
       <div className="ref-mobile-brand-row">
@@ -36,7 +85,7 @@ export default function TodayDashboard({
           <p>On continue sur la lancée. Même discipline, plus de résultats.</p>
         </div>
         <div className="ref-home-meta">
-          <span>Mercredi 24 septembre 2025</span>
+          <time>{todayLabel}</time>
           <button className="ref-bell" aria-label="Notifications" type="button">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
           </button>
@@ -52,15 +101,18 @@ export default function TodayDashboard({
           <button onClick={() => onNavigate('training')}>Voir mon plan <span>→</span></button>
         </div>
 
-        <div className="ref-hero-photo">
-          <span className="ref-hero-photo-tag">Ma progression</span>
-          <img src={demoProgressPhoto} alt="Photo de progression personnelle" />
-        </div>
-
-        <div className="ref-hero-visual" aria-label="Visuel Athleo">
-          <img src="/athleo-hero-reference.jpg" alt="Athlète dans une ambiance sombre Athleo" />
+        <div className="ref-hero-visual" aria-hidden="true">
+          <Image src="/athleo-hero-reference.jpg" alt="" fill priority sizes="(max-width: 820px) 100vw, 55vw" />
         </div>
       </section>
+
+      {photoHighlights.length > 0 && <section className="ref-photo-comparison">
+        <div className="ref-photo-comparison-heading"><div><h2>Mon évolution en photos</h2><p>Premier repère et dernière photo enregistrée.</p></div><span>{photoHighlights.length === 1 ? '1 photo' : 'Comparaison'}</span></div>
+        <div className="ref-photo-comparison-grid">
+          <figure><img src={photoHighlights[0].imageUrl} alt="Première photo de progression" /><figcaption><span>Début</span><time>{new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${photoHighlights[0].measured_at}T12:00:00Z`))}</time></figcaption></figure>
+          {photoHighlights.length > 1 ? <figure><img src={photoHighlights[1].imageUrl} alt="Dernière photo de progression" /><figcaption><span>Dernière photo</span><time>{new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${photoHighlights[1].measured_at}T12:00:00Z`))}</time></figcaption></figure> : <div className="ref-photo-next-step"><b>La suite arrive ici.</b><span>Ajoute une nouvelle photo dans Progression pour comparer ton évolution.</span></div>}
+        </div>
+      </section>}
 
       <section className="ref-priority-section">
         <div className="ref-section-title"><h2>Aujourd’hui</h2><span>Tes priorités du jour.</span></div>
@@ -78,11 +130,10 @@ export default function TodayDashboard({
           <button onClick={() => onNavigate('training')}>Voir mon programme <span>→</span></button>
         </div>
         <div className="ref-week-grid">
-          {week.map(item => (
+          {getWeek().map(item => (
             <article key={item.day} className={item.active ? 'ref-week-card active' : 'ref-week-card'}>
               <div className="ref-week-day"><div><b>{item.day}</b><span>{item.date}</span></div>{item.done ? <span className="ref-week-check">✓</span> : <span className="ref-week-arrow">→</span>}</div>
               <strong>{item.label}</strong>
-              {item.meta && <small>{item.meta}</small>}
             </article>
           ))}
         </div>
