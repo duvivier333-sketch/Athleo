@@ -47,9 +47,11 @@ function getWeek() {
 }
 
 export default function TodayDashboard({
+  userName,
   onNavigate,
   profileControl,
 }: {
+  userName: string;
   onNavigate: (value: Section) => void;
   profileControl: ReactNode;
 }) {
@@ -66,6 +68,9 @@ export default function TodayDashboard({
   return (
     <div className="ref-home">
       <header className="ref-home-header ref-home-header-minimal">
+        <div>
+          <h1>Bonjour <span>{userName}</span>.</h1>
+        </div>
         <div className="ref-home-meta">
           <button className="ref-bell" aria-label="Notifications" type="button">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
