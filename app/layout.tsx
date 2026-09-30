@@ -10,6 +10,7 @@ import './brand.css';
 import './refinements.css';
 import './reference-home.css';
 import './mobile-home.css';
+import './home-order.css';
 
 export const metadata: Metadata = {
   title: 'Athleo',
