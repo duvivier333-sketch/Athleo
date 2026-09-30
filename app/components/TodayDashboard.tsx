@@ -46,14 +46,6 @@ function getWeek() {
   });
 }
 
-const todayLabel = new Intl.DateTimeFormat('fr-FR', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-  timeZone: 'Europe/Paris',
-}).format(new Date());
-
 export default function TodayDashboard({
   userName,
   onNavigate,
@@ -75,17 +67,11 @@ export default function TodayDashboard({
 
   return (
     <div className="ref-home">
-      <div className="ref-mobile-brand-row">
-        <img src="/athleo-logo.webp" alt="Athleo" className="ref-mobile-brand-logo" />
-      </div>
-
       <header className="ref-home-header">
         <div>
           <h1>Bonjour <span>{userName}</span>.</h1>
-          <p>On continue sur la lancée. Même discipline, plus de résultats.</p>
         </div>
         <div className="ref-home-meta">
-          <time>{todayLabel}</time>
           <button className="ref-bell" aria-label="Notifications" type="button">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
           </button>
