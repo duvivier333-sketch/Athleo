@@ -169,7 +169,7 @@ function AuthScreen({ onAuthenticated }: { onAuthenticated: (profile: UserProfil
   return (
     <main className="auth-page">
       <section className="auth-brand-panel">
-        <div className="auth-brand"><span className="brand-mark"><span>A</span></span><strong>ATHLEO</strong></div>
+        <img className="auth-brand-image" src="/athleo-logo.webp" alt="ATHLEO" />
         <div className="auth-brand-copy">
           <p>LA MÉTHODE AU SERVICE DE TON PHYSIQUE.</p>
           <h1>Un espace pensé<br />pour ta progression<span>.</span></h1>
