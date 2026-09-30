@@ -16,7 +16,7 @@ const items: Item[] = [
 
 export default function AppSidebar({ active, onChange }: { active: Section; onChange: (value: Section) => void }) {
   return (
-    <aside className="ref-sidebar">
+    <aside className={active === 'today' ? 'ref-sidebar ref-sidebar-home' : 'ref-sidebar'}>
       <button className="ref-brand" onClick={() => onChange('today')} aria-label="Retour à l’accueil">
         <img className="ref-brand-logo" src="/athleo-logo.webp" alt="ATHLEO" />
       </button>
