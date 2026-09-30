@@ -18,9 +18,7 @@ export default function AppSidebar({ active, onChange }: { active: Section; onCh
   return (
     <aside className="ref-sidebar">
       <button className="ref-brand" onClick={() => onChange('today')} aria-label="Retour à l’accueil">
-        <span className="ref-laurel-logo" aria-hidden="true"><span>A</span></span>
-        <strong>ATHLEO</strong>
-        <small>LA MÉTHODE AU SERVICE<br />DE TON PHYSIQUE.</small>
+        <img className="ref-brand-logo" src="/athleo-logo.webp" alt="ATHLEO" />
       </button>
 
       <div className="ref-menu-label">MENU PRINCIPAL</div>
@@ -39,7 +37,10 @@ export default function AppSidebar({ active, onChange }: { active: Section; onCh
         <button className="ref-nav-item" type="button"><Icon name="settings" /><span>Paramètres</span></button>
       </div>
 
-      <blockquote className="ref-sidebar-quote">« Une meilleure<br />version de toi.<br />Chaque jour. »</blockquote>
+      <div className="ref-sidebar-signature">
+        <img className="ref-sidebar-emblem" src="/athleo-emblem.webp" alt="" aria-hidden="true" />
+        <blockquote className="ref-sidebar-quote">« Une meilleure<br />version de toi.<br />Chaque jour. »</blockquote>
+      </div>
     </aside>
   );
 }
@@ -54,5 +55,5 @@ function Icon({ name }: { name: string }) {
     library: <><rect x="5" y="4" width="14" height="16" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></>,
     settings: <><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.12-1.28l2-1.55-2-3.46-2.45 1a7 7 0 0 0-2.2-1.28L13.9 3h-4l-.34 2.43a7 7 0 0 0-2.2 1.28l-2.45-1-2 3.46 2 1.55A7 7 0 0 0 4.8 12c0 .44.04.87.12 1.28l-2 1.55 2 3.46 2.45-1a7 7 0 0 0 2.2 1.28L9.9 21h4l.34-2.43a7 7 0 0 0 2.2-1.28l2.45 1 2-3.46-2-1.55A7 7 0 0 0 19 12Z"/></>,
   };
-  return <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
+  return <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
