@@ -1,10 +1,11 @@
 'use client';
 
 import { type DragEvent, type FormEvent, useEffect, useRef, useState } from 'react';
-import { PROGRESS_PHOTO_BUCKET, loadProgressPhotos, ProgressPhotoEntry } from '../../lib/progressPhotos';
+import { loadProgressPhotos, ProgressPhotoEntry } from '../../lib/progressPhotos';
 import { supabase } from '../../lib/supabase';
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 const MEASUREMENTS = [
   ['neck', 'Cou'], ['shoulders', 'Épaules'], ['chest', 'Poitrine'], ['waist', 'Taille'], ['hips', 'Hanches'],
   ['left_arm', 'Bras gauche'], ['right_arm', 'Bras droit'], ['left_forearm', 'Avant-bras gauche'], ['right_forearm', 'Avant-bras droit'],
@@ -58,7 +59,7 @@ export default function ProgressPhotos() {
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
-  function chooseFile(nextFile?: File) {
+  async function chooseFile(nextFile?: File) {
     if (!nextFile) return;
     setError('');
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(nextFile.type)) {
@@ -69,17 +70,37 @@ export default function ProgressPhotos() {
       setError('La photo doit faire 5 Mo ou moins.');
       return;
     }
+    let uploadFile = nextFile;
+    if (nextFile.size > MAX_UPLOAD_BYTES) {
+      try {
+        const bitmap = await createImageBitmap(nextFile);
+        const scale = Math.min(1, 1800 / Math.max(bitmap.width, bitmap.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(bitmap.width * scale);
+        canvas.height = Math.round(bitmap.height * scale);
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Préparation de la photo impossible.');
+        context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        bitmap.close();
+        const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.84));
+        if (!blob || blob.size > MAX_UPLOAD_BYTES) throw new Error('La photo reste trop volumineuse après compression.');
+        uploadFile = new File([blob], `${nextFile.name.replace(/\.[^.]+$/, '')}.jpg`, { type: 'image/jpeg', lastModified: Date.now() });
+      } catch (compressionError) {
+        setError(compressionError instanceof Error ? compressionError.message : 'Impossible de préparer cette photo. Essaie un autre fichier.');
+        return;
+      }
+    }
     setDate(parisDateInputValue());
     setWeight('');
     setBodyFat('');
     setMeasurements({});
-    setFile(nextFile);
+    setFile(uploadFile);
   }
 
   function onDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
     setDragging(false);
-    chooseFile(event.dataTransfer.files[0]);
+    void chooseFile(event.dataTransfer.files[0]);
   }
 
   async function savePhoto(event: FormEvent<HTMLFormElement>) {
@@ -88,44 +109,42 @@ export default function ProgressPhotos() {
     setError('');
     setBusy(true);
 
-    let uploadedPath = '';
     let rowSaved = false;
     try {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const { data: authData, error: authError } = await supabase.auth.getSession();
       if (authError) throw authError;
-      if (!authData.user) throw new Error('Connecte-toi pour enregistrer une photo.');
-
-      const extension = file.type === 'image/jpeg' ? 'jpg' : file.type.split('/')[1];
-      uploadedPath = `${authData.user.id}/${crypto.randomUUID()}.${extension}`;
-      const { error: uploadError } = await supabase.storage
-        .from(PROGRESS_PHOTO_BUCKET)
-        .upload(uploadedPath, file, { contentType: file.type, cacheControl: '3600', upsert: false });
-      if (uploadError) throw uploadError;
-
+      if (!authData.session?.access_token) throw new Error('Connecte-toi pour enregistrer une photo.');
       const numericMeasurements = Object.fromEntries(
         Object.entries(measurements)
           .filter(([, value]) => value.trim() !== '')
           .map(([key, value]) => [key, Number(value)]),
       );
-      const { error: rowError } = await supabase.from('progress_entries').insert({
-        user_id: authData.user.id,
-        photo_path: uploadedPath,
-        measured_at: date,
-        weight_kg: weight.trim() ? Number(weight) : null,
-        body_fat_percent: bodyFat.trim() ? Number(bodyFat) : null,
-        measurements: numericMeasurements,
+
+      const formData = new FormData();
+      formData.append('photo', file, file.name);
+      formData.append('measured_at', date);
+      formData.append('weight_kg', weight.trim());
+      formData.append('body_fat_percent', bodyFat.trim());
+      formData.append('measurements', JSON.stringify(numericMeasurements));
+
+      const response = await fetch('/api/progress-photos', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${authData.session.access_token}` },
+        body: formData,
       });
-      if (rowError) throw rowError;
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || `L’enregistrement a échoué (${response.status}).`);
       rowSaved = true;
 
       setFile(null);
       if (inputRef.current) inputRef.current.value = '';
       await refreshEntries();
     } catch (saveError) {
-      if (uploadedPath && !rowSaved) await supabase.storage.from(PROGRESS_PHOTO_BUCKET).remove([uploadedPath]);
       setError(rowSaved
         ? 'Ton repère est enregistré, mais la galerie ne s’est pas actualisée. Recharge la page pour le voir.'
-        : saveError instanceof Error ? saveError.message : 'La photo n’a pas pu être enregistrée.');
+        : saveError instanceof TypeError && saveError.message === 'Failed to fetch'
+          ? 'La connexion a interrompu l’envoi. Vérifie ton réseau puis réessaie.'
+          : saveError instanceof Error ? saveError.message : 'La photo n’a pas pu être enregistrée.');
     } finally {
       setBusy(false);
     }
@@ -137,7 +156,7 @@ export default function ProgressPhotos() {
         <div><h2>Mes photos de progression</h2><p>Une photo par repère, avec tes mesures du jour.</p></div>
         <button type="button" className="progress-photo-add" onClick={() => inputRef.current?.click()}>+ Ajouter une photo</button>
       </div>
-      <input ref={inputRef} className="progress-photo-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choisir une photo de progression" tabIndex={-1} onChange={event => chooseFile(event.target.files?.[0])} />
+      <input ref={inputRef} className="progress-photo-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choisir une photo de progression" tabIndex={-1} onChange={event => { void chooseFile(event.target.files?.[0]); }} />
 
       <div className={`progress-photo-drop${dragging ? ' is-dragging' : ''}`} onDragOver={event => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={onDrop}>
         {loading ? <p>Chargement de tes photos…</p> : entries.length === 0 ? <><strong>Dépose ta première photo ici</strong><span>ou choisis une image JPG, PNG ou WebP, jusqu’à 5 Mo.</span><button type="button" onClick={() => inputRef.current?.click()}>Choisir une photo</button></> : <><strong>Ajouter un nouveau repère</strong><span>Dépose ta photo ici ou choisis un fichier pour saisir tes mesures.</span><button type="button" onClick={() => inputRef.current?.click()}>Choisir une photo</button></>}
@@ -169,8 +188,8 @@ export default function ProgressPhotos() {
             {preview && <img className="photo-upload-preview" src={preview} alt="Aperçu de la photo sélectionnée" />}
             <label className="photo-upload-field">Date du relevé<input type="date" value={date} onChange={event => setDate(event.target.value)} required /></label>
             <div className="photo-upload-primary-fields">
-              <label className="photo-upload-field">Poids (kg)<input type="number" inputMode="decimal" min="1" max="500" step="0.1" value={weight} onChange={event => setWeight(event.target.value)} placeholder="Ex. 80,4" /></label>
-              <label className="photo-upload-field">Masse grasse (%)<input type="number" inputMode="decimal" min="0" max="100" step="0.1" value={bodyFat} onChange={event => setBodyFat(event.target.value)} placeholder="Ex. 13,0" /></label>
+              <label className="photo-upload-field">Poids (kg) · facultatif<input type="number" inputMode="decimal" min="1" max="500" step="0.1" value={weight} onChange={event => setWeight(event.target.value)} placeholder="Ex. 80,4" /></label>
+              <label className="photo-upload-field">Masse grasse (%) · facultative<input type="number" inputMode="decimal" min="0" max="100" step="0.1" value={bodyFat} onChange={event => setBodyFat(event.target.value)} placeholder="Ex. 13,0" /></label>
             </div>
             <fieldset className="photo-measurements-fields"><legend>Mensurations <span>cm · facultatif</span></legend><div>{MEASUREMENTS.map(([key, label]) => <label className="photo-upload-field" key={key}>{label}<input type="number" inputMode="decimal" min="1" max="300" step="0.1" value={measurements[key] || ''} onChange={event => setMeasurements(current => ({ ...current, [key]: event.target.value }))} placeholder="—" /></label>)}</div></fieldset>
           </div>
