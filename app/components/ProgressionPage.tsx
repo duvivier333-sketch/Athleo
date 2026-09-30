@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import ProgressPhotos from './ProgressPhotos';
 
 type MainTab = 'evolution' | 'photos' | 'annual';
 type Metric = 'weight' | 'bodyfat';
@@ -125,7 +126,7 @@ export default function ProgressionPage() {
         </>
       )}
 
-      {tab === 'photos' && <section className="progress-card empty-progress"><div className="empty-icon">▣</div><h2>Photos de progression</h2><p>Ajoute tes photos au fil des semaines pour comparer ton évolution visuellement.</p><button>+ Ajouter une photo</button></section>}
+      {tab === 'photos' && <ProgressPhotos />}
       {tab === 'annual' && <section className="progress-card empty-progress"><div className="empty-icon">↗</div><h2>Parcours annuel</h2><p>Une vue synthétique de tes blocs, de ton poids et de tes principaux repères sur l’année.</p><div className="annual-strip">{['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sept','Oct','Nov','Déc'].map((month,i) => <span className={i < 9 ? 'done' : ''} key={month}>{month}</span>)}</div></section>}
 
       {showRecord && <div className="record-backdrop" onClick={() => setShowRecord(false)}><form className="record-modal" onClick={event => event.stopPropagation()} onSubmit={event => { event.preventDefault(); setShowRecord(false); }}><button type="button" className="record-close" onClick={() => setShowRecord(false)}>×</button><p className="overline">NOUVEAU RELEVÉ</p><h2>Ajouter mes mesures</h2><div className="record-grid"><label>Poids (kg)<input type="number" step="0.1" value={weight} onChange={e => setWeight(e.target.value)} /></label><label>Body fat (%)<input type="number" step="0.1" value={bodyFat} onChange={e => setBodyFat(e.target.value)} /></label><label>Date<input type="date" defaultValue="2026-09-19" /></label></div><button className="save-record" type="submit">Enregistrer le relevé</button></form></div>}
