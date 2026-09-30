@@ -6,6 +6,7 @@ import './progression.css';
 import './coach.css';
 import './theme.css';
 import './brand.css';
+import './refinements.css';
 
 export const metadata: Metadata = {
   title: 'Athleo',
