@@ -3,6 +3,7 @@ import './globals.css';
 import './auth.css';
 import './nutrition.css';
 import './progression.css';
+import './progress-photos.css';
 import './coach.css';
 import './theme.css';
 import './brand.css';
