@@ -4,6 +4,7 @@ import './auth.css';
 import './nutrition.css';
 import './progression.css';
 import './coach.css';
+import './theme.css';
 
 export const metadata: Metadata = {
   title: 'Athleo',
