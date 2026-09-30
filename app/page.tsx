@@ -209,7 +209,7 @@ function Sidebar({ active, onChange }: { active: Section; onChange: (value: Sect
 function TodayHome({ userName, onNavigate }: { userName: string; onNavigate: (value: Section) => void }) {
   return (
     <div className="page-content">
-      <div className="page-intro"><div><p className="overline">CHAQUE JOUR COMPTE</p><h1>Bonjour {userName}<span>.</span></h1><p className="intro-copy">Ton cap, tes repères, ta journée.</p></div><button className="date-switcher"><span>‹</span><b>Aujourd’hui · 19 sept.</b><span>›</span></button></div>
+      <div className="page-intro"><div><p className="overline">CHAQUE JOUR COMPTE</p><h1>Bonjour <span className="user-name">{userName}</span><span className="greeting-dot">.</span></h1><p className="intro-copy">Ton cap, tes repères, ta journée.</p></div><button className="date-switcher"><span>‹</span><b>Aujourd’hui · 19 sept.</b><span>›</span></button></div>
       <section className="goal-card"><div className="goal-main"><p className="goal-label">MON CAP</p><h2>Construire avec méthode.</h2><p className="goal-program">Prise de masse · Semaine 3 sur 12</p><div className="goal-progress"><span style={{ width: '25%' }} /></div><div className="goal-footer"><small>Un bloc. Des repères. Une progression.</small><button>Voir mon parcours <span>→</span></button></div></div><div className="goal-deadline"><div className="calendar-icon">▢</div><p>PROCHAINE ÉCHÉANCE</p><h3>Shooting</h3><span>Dans 12 semaines</span></div></section>
       <div className="dashboard-grid">
         <section className="essential-column">
