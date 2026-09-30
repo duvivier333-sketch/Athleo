@@ -1,0 +1,393 @@
+/* Athleo responsive dashboard refinement — loaded after reference-home.css */
+
+.ref-home{
+  max-width:1320px;
+  padding:18px 0 36px;
+}
+
+.ref-home-header{
+  min-height:94px;
+  height:auto;
+  padding:10px 4px 18px;
+}
+
+.ref-home-header h1{
+  font-size:58px;
+  line-height:.96;
+}
+
+.ref-home-header p{
+  font-size:15px;
+  line-height:1.45;
+}
+
+.ref-hero{
+  height:280px;
+  border-radius:16px;
+  grid-template-columns:35% 25% 40%;
+}
+
+.ref-hero-copy{
+  padding:34px 34px 28px;
+}
+
+.ref-hero-copy h2{
+  font-size:46px;
+}
+
+.ref-hero-sub{
+  font-size:14px;
+  line-height:1.45;
+}
+
+.ref-hero-stats{
+  padding:34px 28px 22px;
+  gap:22px;
+}
+
+.ref-metric strong,
+.ref-weight-stat strong{
+  font-size:22px;
+}
+
+.ref-priority-section{
+  padding-top:22px;
+}
+
+.ref-section-title{
+  gap:14px;
+  margin-bottom:12px;
+}
+
+.ref-section-title h2{
+  font-size:27px;
+}
+
+.ref-section-title span{
+  font-size:11px;
+}
+
+.ref-priority-grid{
+  gap:12px;
+}
+
+.ref-priority-card{
+  min-height:94px;
+  padding:15px 14px;
+  grid-template-columns:42px minmax(0,1fr) 30px;
+  gap:12px;
+  border-radius:13px;
+}
+
+.ref-priority-icon{
+  width:42px;
+  height:42px;
+  border-radius:11px;
+}
+
+.ref-priority-copy>b{
+  font-size:16px;
+}
+
+.ref-priority-copy>strong{
+  font-size:13px;
+  margin-top:4px;
+}
+
+.ref-priority-copy>small{
+  font-size:10px;
+  margin-top:6px;
+}
+
+.ref-priority-arrow{
+  width:30px;
+  height:30px;
+}
+
+.ref-week-section{
+  padding-top:18px;
+}
+
+.ref-week-card{
+  min-height:102px;
+  padding:12px 12px;
+  border-radius:12px;
+}
+
+.ref-week-day{
+  margin-bottom:12px;
+}
+
+.ref-week-day b,
+.ref-week-day span,
+.ref-week-card>strong,
+.ref-week-card>small{
+  font-size:10px;
+}
+
+@media(max-width:1180px){
+  .workspace{padding-left:20px!important;padding-right:20px!important}
+  .ref-home-header h1{font-size:48px}
+  .ref-hero{height:auto;min-height:260px;grid-template-columns:38% 30% 32%}
+  .ref-priority-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ref-week-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+
+@media(max-width:820px){
+  html,body{overflow-x:hidden}
+
+  .workspace{
+    padding:0 14px calc(98px + env(safe-area-inset-bottom))!important;
+  }
+
+  .ref-home{
+    width:100%;
+    max-width:none;
+    padding:12px 0 30px;
+  }
+
+  /* Bottom navigation: touch-first */
+  .ref-sidebar{
+    height:calc(76px + env(safe-area-inset-bottom));
+    padding:0 6px env(safe-area-inset-bottom);
+    background:#0c0c0b;
+  }
+
+  .ref-nav-item{
+    min-height:64px;
+    gap:5px;
+    padding:7px 2px 6px;
+    font-size:10px;
+  }
+
+  .ref-nav-item svg{
+    width:22px;
+    height:22px;
+  }
+
+  .ref-nav-item.active{
+    background:linear-gradient(180deg,rgba(151,30,37,.28),rgba(151,30,37,.12));
+    box-shadow:inset 0 3px 0 #b62d35;
+  }
+
+  /* Mobile header */
+  .ref-home-header{
+    min-height:0;
+    padding:8px 2px 18px;
+    align-items:flex-start;
+    gap:12px;
+  }
+
+  .ref-home-header h1{
+    font-size:39px;
+    line-height:1;
+    letter-spacing:-1.6px;
+  }
+
+  .ref-home-header p{
+    max-width:290px;
+    margin-top:7px;
+    font-size:13px;
+    line-height:1.4;
+  }
+
+  .ref-home-meta{
+    padding-top:2px;
+    gap:6px;
+  }
+
+  .ref-home-meta>span,
+  .ref-bell{display:none}
+
+  .ref-home-meta .avatar{
+    width:38px!important;
+    height:38px!important;
+  }
+
+  /* Hero becomes a readable vertical card */
+  .ref-hero{
+    display:flex;
+    flex-direction:column;
+    height:auto;
+    min-height:0;
+    border-radius:16px;
+  }
+
+  .ref-hero-copy{
+    padding:26px 22px 22px;
+  }
+
+  .ref-kicker{
+    font-size:9px;
+    letter-spacing:2.6px;
+  }
+
+  .ref-hero-copy h2{
+    font-size:39px;
+    line-height:1;
+  }
+
+  .ref-hero-sub{
+    margin:12px 0 18px;
+    font-size:14px;
+  }
+
+  .ref-hero-copy button{
+    width:100%;
+    min-height:46px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 16px;
+    font-size:12px;
+  }
+
+  .ref-hero-stats{
+    border-left:0;
+    border-top:1px solid rgba(255,255,255,.09);
+    padding:20px 22px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px 20px;
+  }
+
+  .ref-metric>span,
+  .ref-weight-stat>span{
+    font-size:7px;
+    letter-spacing:1.4px;
+  }
+
+  .ref-metric strong,
+  .ref-weight-stat strong{
+    font-size:18px;
+  }
+
+  .ref-weight-stat{
+    grid-column:1/-1;
+    padding-top:2px;
+  }
+
+  .ref-mini-chart{
+    height:30px;
+    margin-top:4px;
+  }
+
+  .ref-hero-visual{
+    height:150px;
+    order:3;
+  }
+
+  .ref-hero-visual img{
+    object-position:55% 28%;
+  }
+
+  /* Main actions: one clear card per row */
+  .ref-priority-section{
+    padding-top:24px;
+  }
+
+  .ref-section-title{
+    display:block;
+    margin:0 2px 12px;
+  }
+
+  .ref-section-title h2{
+    font-size:26px;
+    line-height:1.1;
+  }
+
+  .ref-section-title span{
+    display:block;
+    margin-top:3px;
+    font-size:11px;
+  }
+
+  .ref-priority-grid{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  .ref-priority-card{
+    min-height:86px;
+    padding:14px;
+    grid-template-columns:46px minmax(0,1fr) 32px;
+    border-radius:14px;
+    box-shadow:0 5px 18px rgba(67,45,29,.045);
+  }
+
+  .ref-priority-icon{
+    width:46px;
+    height:46px;
+    border-radius:12px;
+  }
+
+  .ref-priority-copy>b{
+    font-size:16px;
+  }
+
+  .ref-priority-copy>strong{
+    font-size:14px;
+  }
+
+  .ref-priority-copy>small{
+    font-size:11px;
+  }
+
+  .ref-card-progress{
+    height:5px;
+    margin-top:8px;
+  }
+
+  /* Week is horizontally scrollable instead of compressed */
+  .ref-week-section{
+    padding-top:24px;
+  }
+
+  .ref-week-head{
+    display:block;
+    margin-bottom:10px;
+  }
+
+  .ref-week-head>button{display:none}
+
+  .ref-week-grid{
+    display:flex;
+    gap:9px;
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+    scroll-snap-type:x proximity;
+    padding:0 2px 8px;
+    margin:0 -2px;
+    scrollbar-width:none;
+  }
+
+  .ref-week-grid::-webkit-scrollbar{display:none}
+
+  .ref-week-card{
+    flex:0 0 126px;
+    min-height:112px;
+    scroll-snap-align:start;
+    padding:13px;
+  }
+
+  .ref-week-day b,
+  .ref-week-day span,
+  .ref-week-card>strong,
+  .ref-week-card>small{
+    font-size:11px;
+  }
+}
+
+@media(max-width:430px){
+  .workspace{padding-left:12px!important;padding-right:12px!important}
+  .ref-home-header h1{font-size:35px}
+  .ref-home-header p{font-size:12.5px}
+  .ref-hero-copy{padding:24px 19px 20px}
+  .ref-hero-copy h2{font-size:36px}
+  .ref-hero-stats{padding:18px 19px;grid-template-columns:1fr}
+  .ref-weight-stat{grid-column:auto}
+  .ref-hero-visual{height:135px}
+  .ref-priority-card{grid-template-columns:44px minmax(0,1fr) 30px;padding:13px 12px}
+  .ref-priority-icon{width:44px;height:44px}
+  .ref-week-card{flex-basis:118px}
+}
