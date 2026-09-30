@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import { supabasePublishableKey, supabaseUrl } from '../../../lib/supabase';
+import { supabasePublishableKey, supabaseUrl } from '../../../lib/supabaseConfig';
 
 export const runtime = 'nodejs';
 
