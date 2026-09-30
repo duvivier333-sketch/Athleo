@@ -1,7 +1,8 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Image from 'next/image';
+import { loadProgressPhotoHighlights, ProgressPhotoEntry } from '../../lib/progressPhotos';
 
 type Section = 'today' | 'training' | 'nutrition' | 'progress' | 'coach' | 'boost';
 
@@ -62,6 +63,16 @@ export default function TodayDashboard({
   onNavigate: (value: Section) => void;
   profileControl: ReactNode;
 }) {
+  const [photoHighlights, setPhotoHighlights] = useState<ProgressPhotoEntry[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    loadProgressPhotoHighlights()
+      .then(items => { if (active) setPhotoHighlights(items); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+
   return (
     <div className="ref-home">
       <div className="ref-mobile-brand-row">
@@ -94,6 +105,14 @@ export default function TodayDashboard({
           <Image src="/athleo-hero-reference.jpg" alt="" fill priority sizes="(max-width: 820px) 100vw, 55vw" />
         </div>
       </section>
+
+      {photoHighlights.length > 0 && <section className="ref-photo-comparison">
+        <div className="ref-photo-comparison-heading"><div><h2>Mon évolution en photos</h2><p>Premier repère et dernière photo enregistrée.</p></div><span>{photoHighlights.length === 1 ? '1 photo' : 'Comparaison'}</span></div>
+        <div className="ref-photo-comparison-grid">
+          <figure><img src={photoHighlights[0].imageUrl} alt="Première photo de progression" /><figcaption><span>Début</span><time>{new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${photoHighlights[0].measured_at}T12:00:00Z`))}</time></figcaption></figure>
+          {photoHighlights.length > 1 ? <figure><img src={photoHighlights[1].imageUrl} alt="Dernière photo de progression" /><figcaption><span>Dernière photo</span><time>{new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${photoHighlights[1].measured_at}T12:00:00Z`))}</time></figcaption></figure> : <div className="ref-photo-next-step"><b>La suite arrive ici.</b><span>Ajoute une nouvelle photo dans Progression pour comparer ton évolution.</span></div>}
+        </div>
+      </section>}
 
       <section className="ref-priority-section">
         <div className="ref-section-title"><h2>Aujourd’hui</h2><span>Tes priorités du jour.</span></div>
