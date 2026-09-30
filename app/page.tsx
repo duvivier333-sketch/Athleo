@@ -6,6 +6,8 @@ import { supabase } from '../lib/supabase';
 import NutritionPage from './components/NutritionPage';
 import ProgressionPage from './components/ProgressionPage';
 import CoachPage from './components/CoachPage';
+import AppSidebar from './components/AppSidebar';
+import TodayDashboard from './components/TodayDashboard';
 
 type Section = 'today' | 'training' | 'nutrition' | 'progress' | 'coach' | 'boost';
 type AuthMode = 'signup' | 'login';
@@ -76,26 +78,31 @@ export default function Page() {
   if (!profile) return <AuthScreen onAuthenticated={setProfile} />;
 
   const initials = `${profile.firstName[0] || ''}${profile.lastName[0] || ''}`.toUpperCase() || 'A';
+  const profileControl = (
+    <div className="profile-shell">
+      <button className="avatar" aria-label="Profil utilisateur" onClick={() => setProfileOpen(value => !value)}>{initials}</button>
+      {profileOpen && (
+        <div className="profile-menu">
+          <b>{profile.firstName} {profile.lastName}</b>
+          <span>{profile.email}</span>
+          <button onClick={signOut}>Se déconnecter</button>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <main className="app">
-      <Sidebar active={section} onChange={setSection} />
+      <AppSidebar active={section} onChange={setSection} />
       <section className="workspace">
-        <header className="workspace-topbar">
-          <div className="breadcrumb">TON ESPACE <span>/</span> {section === 'today' ? "AUJOURD’HUI" : navItems.find(i => i.id === section)?.label.toUpperCase()}</div>
-          <div className="profile-shell">
-            <button className="avatar" aria-label="Profil utilisateur" onClick={() => setProfileOpen(v => !v)}>{initials}</button>
-            {profileOpen && (
-              <div className="profile-menu">
-                <b>{profile.firstName} {profile.lastName}</b>
-                <span>{profile.email}</span>
-                <button onClick={signOut}>Se déconnecter</button>
-              </div>
-            )}
-          </div>
-        </header>
+        {section !== 'today' && (
+          <header className="workspace-topbar">
+            <div className="breadcrumb">TON ESPACE <span>/</span> {navItems.find(item => item.id === section)?.label.toUpperCase()}</div>
+            {profileControl}
+          </header>
+        )}
 
-        {section === 'today' && <TodayHome userName={profile.firstName} onNavigate={setSection} />}
+        {section === 'today' && <TodayDashboard userName={profile.firstName} onNavigate={setSection} profileControl={profileControl} />}
         {section === 'nutrition' && <NutritionPage />}
         {section === 'progress' && <ProgressionPage />}
         {section === 'coach' && <CoachPage userName={profile.firstName} />}
@@ -181,9 +188,14 @@ function AuthScreen({ onAuthenticated }: { onAuthenticated: (profile: UserProfil
             <span>{mode === 'signup' ? 'Quelques informations suffisent pour personnaliser ton expérience.' : 'Connecte-toi avec les informations de ton compte.'}</span>
           </div>
           <form onSubmit={submit} className="auth-form">
-            {mode === 'signup' && <div className="auth-name-grid"><label>Prénom<input value={firstName} onChange={e => setFirstName(e.target.value)} autoComplete="given-name" placeholder="Gwendal" /></label><label>Nom<input value={lastName} onChange={e => setLastName(e.target.value)} autoComplete="family-name" placeholder="Duvivier" /></label></div>}
-            <label>Adresse e-mail<input type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" placeholder="nom@exemple.fr" /></label>
-            <label>Mot de passe<input type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} placeholder="8 caractères minimum" /></label>
+            {mode === 'signup' && (
+              <div className="auth-name-grid">
+                <label>Prénom<input value={firstName} onChange={event => setFirstName(event.target.value)} autoComplete="given-name" placeholder="Gwendal" /></label>
+                <label>Nom<input value={lastName} onChange={event => setLastName(event.target.value)} autoComplete="family-name" placeholder="Duvivier" /></label>
+              </div>
+            )}
+            <label>Adresse e-mail<input type="email" value={email} onChange={event => setEmail(event.target.value)} autoComplete="email" placeholder="nom@exemple.fr" /></label>
+            <label>Mot de passe<input type="password" value={password} onChange={event => setPassword(event.target.value)} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} placeholder="8 caractères minimum" /></label>
             {error && <p className="auth-error">{error}</p>}
             {info && <p className="auth-info">{info}</p>}
             <button className="auth-submit" type="submit" disabled={loading}>{loading ? 'Chargement…' : mode === 'signup' ? 'Créer mon compte' : 'Me connecter'} <span>→</span></button>
@@ -195,52 +207,19 @@ function AuthScreen({ onAuthenticated }: { onAuthenticated: (profile: UserProfil
   );
 }
 
-function Sidebar({ active, onChange }: { active: Section; onChange: (value: Section) => void }) {
+function SectionPlaceholder({ section }: { section: Exclude<Section, 'today' | 'nutrition' | 'progress' | 'coach'> }) {
+  const data = sectionMeta[section];
   return (
-    <aside className="sidebar">
-      <button className="brand" onClick={() => onChange('today')} aria-label="Retour à l’accueil"><span className="brand-mark"><span>A</span></span><strong>ATHLEO</strong></button>
-      <p className="sidebar-label">TON ESPACE</p>
-      <nav className="nav-list">{navItems.map(item => <button key={item.id} className={active === item.id ? 'nav-item active' : 'nav-item'} onClick={() => onChange(item.id)}><Icon name={item.icon} /><span>{item.label}</span></button>)}</nav>
-      <div className="sidebar-signature"><div className="signature-a">A</div><p>La méthode au service<br />de ton physique.</p></div>
-    </aside>
-  );
-}
-
-function TodayHome({ userName, onNavigate }: { userName: string; onNavigate: (value: Section) => void }) {
-  return (
-    <div className="page-content">
-      <div className="page-intro"><div><p className="overline">CHAQUE JOUR COMPTE</p><h1>Bonjour <span className="user-name">{userName}</span><span className="greeting-dot">.</span></h1><p className="intro-copy">Ton cap, tes repères, ta journée.</p></div><button className="date-switcher"><span>‹</span><b>Aujourd’hui · 19 sept.</b><span>›</span></button></div>
-      <section className="goal-card"><div className="goal-main"><p className="goal-label">MON CAP</p><h2>Construire avec méthode.</h2><p className="goal-program">Prise de masse · Semaine 3 sur 12</p><div className="goal-progress"><span style={{ width: '25%' }} /></div><div className="goal-footer"><small>Un bloc. Des repères. Une progression.</small><button>Voir mon parcours <span>→</span></button></div></div><div className="goal-deadline"><div className="calendar-icon">▢</div><p>PROCHAINE ÉCHÉANCE</p><h3>Shooting</h3><span>Dans 12 semaines</span></div></section>
-      <div className="dashboard-grid">
-        <section className="essential-column">
-          <div className="section-heading"><h2>L’essentiel du jour</h2><span>0 / 2 actions renseignées</span></div>
-          <article className="large-card workout-card"><div className="card-topline"><div className="card-category"><span className="category-icon"><Icon name="training" /></span><b>ENTRAÎNEMENT</b></div><span className="status">À faire</span></div><div className="card-body-row"><div><h3>Upper B</h3><p>Ta séance prévue ce jour</p></div><button className="round-arrow" onClick={() => onNavigate('training')}>→</button></div><div className="card-footer"><span>2 séances réalisées cette semaine</span><button onClick={() => onNavigate('training')}>Voir ma séance</button></div></article>
-          <article className="large-card nutrition-card"><div className="card-topline"><div className="card-category"><span className="category-icon"><Icon name="nutrition" /></span><b>NUTRITION</b></div><span className="status blue">Jour haut</span></div><div className="nutrition-head"><div><h3>1 004 <small>/ 2 800 kcal</small></h3><p>Consommé / objectif du jour</p></div><button className="round-arrow" onClick={() => onNavigate('nutrition')}>→</button></div><div className="macro-grid"><Macro label="Protéines" value="84" target="170 g" progress={49} tone="blue" /><Macro label="Glucides" value="140" target="350 g" progress={40} tone="dark" /><Macro label="Lipides" value="10" target="80 g" progress={13} tone="gray" /></div><div className="card-footer"><span>2 repas renseignés sur 4</span><button onClick={() => onNavigate('nutrition')}>Voir ma diète</button></div></article>
-          <article className="coach-card"><div className="coach-icon"><Icon name="coach" /></div><div><div className="coach-title">Le point du coach <span>IA</span></div><p>Tes deux dernières séances sont renseignées. Retrouve ta séance dans ton programme et complète ton check du jour.</p><button onClick={() => onNavigate('coach')}>Échanger avec ATHLEO <span>→</span></button></div></article>
-        </section>
-        <aside className="reference-column">
-          <div className="section-heading"><h2>Mes repères</h2><span>AUJOURD’HUI</span></div>
-          <article className="side-card check-card"><div className="check-row"><span className="check-icon">✓</span><span className="status">À compléter</span></div><h3>Mon check quotidien</h3><p>Poids, sommeil, forme.<br />Un point rapide pour te situer.</p><button>Faire le point <span>→</span></button></article>
-          <article className="side-card activity-card"><div className="side-title"><h3>Mon activité</h3><span>→</span></div><Activity label="Pas" value="5 800" target="8 000" progress={72} /><Activity label="Cardio" value="20" target="20 min" progress={100} done /></article>
-          <article className="supplement-card" onClick={() => onNavigate('boost')}><div className="pill">◇</div><div><b>Mes prises du jour</b><span>1 sur 2 renseignée</span></div><span>›</span></article>
-          <section className="week-block"><div className="week-title"><h3>Cette semaine</h3><span>SEPTEMBRE</span></div><div className="week-days">{['14','15','16','17','18','19','20'].map((day, i) => <div className={day === '19' ? 'day active' : day === '18' ? 'day done' : 'day'} key={day}><small>{['L','M','M','J','V','S','D'][i]}</small><b>{day}</b></div>)}</div></section>
-        </aside>
+    <div className="placeholder-page">
+      <p className="overline">{data.eyebrow}</p>
+      <h1>{data.title}<span>.</span></h1>
+      <p>{data.text}</p>
+      <div className="placeholder-card">
+        <div className="placeholder-icon"><Icon name={navItems.find(item => item.id === section)?.icon || 'home'} /></div>
+        <div><b>Section prête</b><span>Envoie-moi les éléments de cet onglet et je construirai son contenu ici sans modifier la structure générale d’Athleo.</span></div>
       </div>
     </div>
   );
-}
-
-function Macro({ label, value, target, progress, tone }: { label: string; value: string; target: string; progress: number; tone: string }) {
-  return <div className="macro"><span>{label}</span><b>{value} <small>/ {target}</small></b><div className={`macro-bar ${tone}`}><span style={{ width: `${progress}%` }} /></div></div>;
-}
-
-function Activity({ label, value, target, progress, done }: { label: string; value: string; target: string; progress: number; done?: boolean }) {
-  return <div className="activity-row"><div className="activity-line"><span>{label}</span><b>{value} <small>/ {target}</small>{done && <em>✓</em>}</b></div><div className="activity-progress"><span style={{ width: `${progress}%` }} /></div></div>;
-}
-
-function SectionPlaceholder({ section }: { section: Exclude<Section, 'today' | 'nutrition' | 'progress' | 'coach'> }) {
-  const data = sectionMeta[section];
-  return <div className="placeholder-page"><p className="overline">{data.eyebrow}</p><h1>{data.title}<span>.</span></h1><p>{data.text}</p><div className="placeholder-card"><div className="placeholder-icon"><Icon name={navItems.find(i => i.id === section)?.icon || 'home'} /></div><div><b>Section prête</b><span>Envoie-moi les éléments de cet onglet et je construirai son contenu ici sans modifier la structure générale d’Athleo.</span></div></div></div>;
 }
 
 function Icon({ name }: { name: string }) {
