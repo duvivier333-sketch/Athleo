@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { demoProgressPhoto } from './demoProgressPhoto';
 
 type Section = 'today' | 'training' | 'nutrition' | 'progress' | 'coach' | 'boost';
 
@@ -25,6 +26,10 @@ export default function TodayDashboard({
 }) {
   return (
     <div className="ref-home">
+      <div className="ref-mobile-brand-row">
+        <img src="/athleo-logo.webp" alt="Athleo" className="ref-mobile-brand-logo" />
+      </div>
+
       <header className="ref-home-header">
         <div>
           <h1>Bonjour <span>{userName}</span>.</h1>
@@ -47,16 +52,9 @@ export default function TodayDashboard({
           <button onClick={() => onNavigate('training')}>Voir mon plan <span>→</span></button>
         </div>
 
-        <div className="ref-hero-stats">
-          <Metric label="SÉANCES CETTE SEMAINE" value="3 / 4" progress={76} />
-          <Metric label="APPORT CALORIQUE" value="2 104 / 2 800 kcal" progress={75} />
-          <div className="ref-weight-stat">
-            <span>POIDS ACTUEL</span>
-            <strong>80,4 kg <em>↓ -0,8 kg</em></strong>
-            <svg className="ref-mini-chart" viewBox="0 0 170 42" preserveAspectRatio="none" aria-hidden="true">
-              <path d="M1 34 C20 31,24 35,42 29 S67 30,84 24 S110 26,128 17 S151 20,169 7" fill="none" stroke="currentColor" strokeWidth="2" />
-            </svg>
-          </div>
+        <div className="ref-hero-photo">
+          <span className="ref-hero-photo-tag">Ma progression</span>
+          <img src={demoProgressPhoto} alt="Photo de progression personnelle" />
         </div>
 
         <div className="ref-hero-visual" aria-label="Visuel Athleo">
@@ -89,16 +87,6 @@ export default function TodayDashboard({
           ))}
         </div>
       </section>
-    </div>
-  );
-}
-
-function Metric({ label, value, progress }: { label: string; value: string; progress: number }) {
-  return (
-    <div className="ref-metric">
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <div><i style={{ width: `${progress}%` }} /></div>
     </div>
   );
 }
