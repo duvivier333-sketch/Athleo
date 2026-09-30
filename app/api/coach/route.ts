@@ -68,6 +68,10 @@ function formatProgress(entries: any[]) {
   }).join('\n');
 }
 
+function formatHistory(messages: StoredMessage[]) {
+  return messages.map(item => `${item.role === 'assistant' ? 'ATHLEO' : 'UTILISATEUR'}: ${item.content}`).join('\n\n');
+}
+
 async function authenticate(request: Request) {
   const accessToken = bearerToken(request);
   if (!accessToken) return { error: NextResponse.json({ error: 'Connecte-toi pour utiliser le Coach IA.' }, { status: 401 }) };
@@ -211,10 +215,7 @@ ${formatKnowledge(knowledge)}`;
     body: JSON.stringify({
       model: process.env.OPENAI_MODEL || DEFAULT_MODEL,
       instructions,
-      input: history.map(item => ({
-        role: item.role,
-        content: [{ type: 'input_text', text: item.content }],
-      })),
+      input: `Voici l’historique récent de la discussion. Réponds au dernier message de l’utilisateur.\n\n${formatHistory(history)}`,
       max_output_tokens: 900,
       reasoning: { effort: 'low' },
     }),
