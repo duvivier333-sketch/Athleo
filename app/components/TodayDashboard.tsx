@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, type ReactNode } from 'react';
-import Image from 'next/image';
 import { loadProgressPhotoHighlights, ProgressPhotoEntry } from '../../lib/progressPhotos';
 
 type Section = 'today' | 'training' | 'nutrition' | 'progress' | 'coach' | 'boost';
@@ -55,6 +54,10 @@ function formatProgressDate(value: string) {
   }).format(new Date(`${value}T12:00:00Z`));
 }
 
+function formatProgressWeight(weight: number) {
+  return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(weight)} kg`;
+}
+
 function getWeightDeltaLabel(items: ProgressPhotoEntry[]) {
   if (items.length < 2) return null;
   const firstWeight = items[0].weight_kg;
@@ -62,11 +65,10 @@ function getWeightDeltaLabel(items: ProgressPhotoEntry[]) {
   if (firstWeight === null || lastWeight === null) return null;
   const delta = lastWeight - firstWeight;
   const formatted = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(Math.abs(delta));
-  return `${delta >= 0 ? '+' : '-'}${formatted} kg`;
+  return `${delta >= 0 ? '+' : '−'}${formatted} kg`;
 }
 
 export default function TodayDashboard({
-  userName,
   onNavigate,
   profileControl,
 }: {
@@ -84,14 +86,17 @@ export default function TodayDashboard({
     return () => { active = false; };
   }, []);
 
-  const weightDeltaLabel = getWeightDeltaLabel(photoHighlights);
+  const weightComparison = photoHighlights.length > 1
+    ? {
+        initial: photoHighlights[0].weight_kg,
+        current: photoHighlights[1].weight_kg,
+        label: getWeightDeltaLabel(photoHighlights),
+      }
+    : null;
 
   return (
     <div className="ref-home">
       <header className="ref-home-header ref-home-header-minimal">
-        <div className="ref-home-greeting">
-          <h1>Bonjour <span>{userName}</span>.</h1>
-        </div>
         <div className="ref-home-meta">
           <button className="ref-bell" aria-label="Notifications" type="button">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
@@ -102,50 +107,52 @@ export default function TodayDashboard({
 
       <section className="ref-photo-comparison ref-photo-comparison-prominent">
         <div className="ref-photo-comparison-heading">
-          <div>
-            <p className="ref-photo-eyebrow">ÉVOLUTION PHYSIQUE EN PHOTOS</p>
-            <h2>Transphormation</h2>
-          </div>
-          {weightDeltaLabel && <strong className="ref-photo-delta">{weightDeltaLabel}</strong>}
+          <h2>Transformation</h2>
         </div>
 
         {photoHighlights.length === 0 ? (
           <button className="ref-photo-empty" type="button" onClick={() => onNavigate('progress')}>
             <b>Ajoute tes premières photos</b>
-            <span>Tu retrouveras ici ton avant / après et l’écart de poids entre les deux repères.</span>
+            <span>Ton évolution apparaîtra ici.</span>
           </button>
         ) : (
-          <div className="ref-photo-comparison-grid">
-            <figure>
-              <img src={photoHighlights[0].imageUrl} alt="Première photo de progression" />
-              <figcaption><span>Début</span><time>{formatProgressDate(photoHighlights[0].measured_at)}</time></figcaption>
-            </figure>
-            {photoHighlights.length > 1 ? (
+          <>
+            <div className="ref-photo-comparison-grid">
               <figure>
-                <img src={photoHighlights[1].imageUrl} alt="Dernière photo de progression" />
-                <figcaption><span>Maintenant</span><time>{formatProgressDate(photoHighlights[1].measured_at)}</time></figcaption>
+                <img src={photoHighlights[0].imageUrl} alt="Première photo de progression" />
+                <figcaption><time>{formatProgressDate(photoHighlights[0].measured_at)}</time></figcaption>
               </figure>
-            ) : (
-              <button className="ref-photo-next-step" type="button" onClick={() => onNavigate('progress')}>
-                <b>Ajoute une deuxième photo</b>
-                <span>Elle apparaîtra ici pour visualiser ta transphormation.</span>
-              </button>
+              {photoHighlights.length > 1 ? (
+                <figure>
+                  <img src={photoHighlights[1].imageUrl} alt="Dernière photo de progression" />
+                  <figcaption><time>{formatProgressDate(photoHighlights[1].measured_at)}</time></figcaption>
+                </figure>
+              ) : (
+                <button className="ref-photo-next-step" type="button" onClick={() => onNavigate('progress')}>
+                  <b>Ajoute une deuxième photo</b>
+                  <span>Elle apparaîtra ici pour visualiser ton évolution.</span>
+                </button>
+              )}
+            </div>
+            {weightComparison && weightComparison.initial !== null && weightComparison.current !== null && (
+              <div className="ref-photo-weight-progress" aria-label={`Écart de poids : ${weightComparison.label}`}>
+                <div className="ref-photo-weight-point"><span>Initial</span><strong>{formatProgressWeight(weightComparison.initial)}</strong></div>
+                <span className="ref-photo-weight-delta">{weightComparison.label}</span>
+                <div className="ref-photo-weight-point"><span>Actuel</span><strong>{formatProgressWeight(weightComparison.current)}</strong></div>
+              </div>
             )}
-          </div>
+          </>
         )}
       </section>
 
-      <section className="ref-hero ref-hero-after-photos">
-        <div className="ref-hero-copy">
-          <p className="ref-kicker">TON OBJECTIF</p>
-          <h2>Plus fort,<br />plus régulier.</h2>
-          <p className="ref-hero-sub">Suis ton plan, reste constant,<br />les résultats suivent.</p>
-          <button onClick={() => onNavigate('training')}>Voir mon plan <span>→</span></button>
+      <section className="ref-coach-cta" aria-label="Discussion avec le coach">
+        <div className="ref-coach-cta-copy">
+          <p>COACH IA</p>
+          <h2>Un conseil pour la suite&nbsp;?</h2>
         </div>
-
-        <div className="ref-hero-visual" aria-hidden="true">
-          <Image src="/athleo-hero-reference.jpg" alt="" fill priority sizes="(max-width: 820px) 100vw, 55vw" />
-        </div>
+        <button type="button" onClick={() => onNavigate('coach')}>
+          Parler avec mon coach <span aria-hidden="true">→</span>
+        </button>
       </section>
 
       <section className="ref-priority-section">
