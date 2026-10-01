@@ -107,3 +107,49 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ success: true }, { status: 201 });
 }
+
+
+export async function PATCH(request: Request) {
+  const authorization = request.headers.get('authorization') || '';
+  const accessToken = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
+  if (!accessToken) return NextResponse.json({ error: 'Connecte-toi pour modifier ce repère.' }, { status: 401 });
+
+  const supabase = createClient(supabaseUrl, supabasePublishableKey, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+  });
+  const { data: authData, error: authError } = await supabase.auth.getUser(accessToken);
+  if (authError || !authData.user) {
+    return NextResponse.json({ error: 'Ta session a expiré. Reconnecte-toi puis réessaie.' }, { status: 401 });
+  }
+
+  let payload: { id?: unknown; weight_kg?: unknown };
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Les informations du repère sont illisibles.' }, { status: 400 });
+  }
+
+  const id = typeof payload.id === 'string' ? payload.id.trim() : '';
+  if (!id || !Object.prototype.hasOwnProperty.call(payload, 'weight_kg')) {
+    return NextResponse.json({ error: 'Repère ou poids manquant.' }, { status: 400 });
+  }
+  const weight = payload.weight_kg === null
+    ? null
+    : typeof payload.weight_kg === 'number' ? payload.weight_kg : NaN;
+  if (Number.isNaN(weight) || (weight !== null && (!Number.isFinite(weight) || weight < 1 || weight > 500))) {
+    return NextResponse.json({ error: 'Le poids doit être compris entre 1 et 500 kg.' }, { status: 400 });
+  }
+
+  const { data, error } = await supabase
+    .from('progress_entries')
+    .update({ weight_kg: weight })
+    .eq('id', id)
+    .eq('user_id', authData.user.id)
+    .select('id')
+    .maybeSingle();
+
+  if (error) return NextResponse.json({ error: 'Le poids n’a pas pu être enregistré.' }, { status: 502 });
+  if (!data) return NextResponse.json({ error: 'Ce repère est introuvable.' }, { status: 404 });
+  return NextResponse.json({ success: true });
+}
