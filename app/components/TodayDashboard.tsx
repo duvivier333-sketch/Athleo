@@ -134,11 +134,13 @@ export default function TodayDashboard({
                 </button>
               )}
             </div>
-            {weightComparison && weightComparison.initial !== null && weightComparison.current !== null && (
-              <div className="ref-photo-weight-progress" aria-label={`Écart de poids : ${weightComparison.label}`}>
-                <div className="ref-photo-weight-point"><span>Initial</span><strong>{formatProgressWeight(weightComparison.initial)}</strong></div>
-                <span className="ref-photo-weight-delta">{weightComparison.label}</span>
-                <div className="ref-photo-weight-point"><span>Actuel</span><strong>{formatProgressWeight(weightComparison.current)}</strong></div>
+            {weightComparison && (
+              <div className="ref-photo-weight-progress" aria-label={weightComparison.label ? `Écart de poids : ${weightComparison.label}` : 'Poids à renseigner pour comparer les photos'}>
+                <div className="ref-photo-weight-point"><span>Initial</span><strong>{weightComparison.initial !== null ? formatProgressWeight(weightComparison.initial) : '— kg'}</strong></div>
+                {weightComparison.label
+                  ? <span className="ref-photo-weight-delta">{weightComparison.label}</span>
+                  : <button className="ref-photo-weight-delta ref-photo-weight-delta-missing" type="button" onClick={() => onNavigate('progress')}>Renseigner</button>}
+                <div className="ref-photo-weight-point"><span>Actuel</span><strong>{weightComparison.current !== null ? formatProgressWeight(weightComparison.current) : '— kg'}</strong></div>
               </div>
             )}
           </>

@@ -38,6 +38,10 @@ export default function ProgressPhotos() {
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState('');
+  const [editingEntry, setEditingEntry] = useState<ProgressPhotoEntry | null>(null);
+  const [editWeight, setEditWeight] = useState('');
+  const [savingWeight, setSavingWeight] = useState(false);
+  const [editError, setEditError] = useState('');
 
   async function refreshEntries() {
     setEntries(await loadProgressPhotos());
@@ -101,6 +105,37 @@ export default function ProgressPhotos() {
     event.preventDefault();
     setDragging(false);
     void chooseFile(event.dataTransfer.files[0]);
+  }
+
+  async function saveWeight(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingEntry) return;
+    setEditError('');
+    setSavingWeight(true);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getSession();
+      if (authError) throw authError;
+      if (!authData.session?.access_token) throw new Error('Connecte-toi pour modifier ce repère.');
+      const response = await fetch('/api/progress-photos', {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${authData.session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: editingEntry.id,
+          weight_kg: editWeight.trim() === '' ? null : Number(editWeight),
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'Le poids n’a pas pu être enregistré.');
+      await refreshEntries();
+      setEditingEntry(null);
+    } catch (saveError) {
+      setEditError(saveError instanceof Error ? saveError.message : 'Le poids n’a pas pu être enregistré.');
+    } finally {
+      setSavingWeight(false);
+    }
   }
 
   async function savePhoto(event: FormEvent<HTMLFormElement>) {
@@ -175,10 +210,36 @@ export default function ProgressPhotos() {
                 {entry.weight_kg != null && <span><b>{entry.weight_kg}</b> kg</span>}
                 {entry.body_fat_percent != null && <span><b>{entry.body_fat_percent}</b> % masse grasse</span>}
               </div>
+              <button
+                type="button"
+                className="progress-photo-weight-edit"
+                onClick={() => { setEditingEntry(entry); setEditWeight(entry.weight_kg?.toString() || ''); setEditError(''); }}
+              >
+                {entry.weight_kg == null ? 'Renseigner le poids' : 'Modifier le poids'}
+              </button>
               {filledMeasurements.length > 0 && <details className="progress-photo-measurements"><summary>Mensurations · {filledMeasurements.length}</summary><div>{filledMeasurements.map(([key, label]) => <span key={key}>{label} <b>{entry.measurements[key]} cm</b></span>)}</div></details>}
             </div>
           </article>;
         })}
+      </div>}
+
+      {editingEntry && <div className="photo-upload-backdrop" onMouseDown={event => { if (event.target === event.currentTarget && !savingWeight) setEditingEntry(null); }}>
+        <form className="photo-upload-modal photo-weight-edit-modal" onSubmit={saveWeight}>
+          <div className="photo-upload-head">
+            <div><p className="overline">REPÈRE DU {displayDate(editingEntry.measured_at).toLocaleUpperCase('fr-FR')}</p><h2>Renseigner le poids</h2><span>Le poids est associé à la date de cette photo.</span></div>
+            <button type="button" aria-label="Fermer" onClick={() => setEditingEntry(null)} disabled={savingWeight}>×</button>
+          </div>
+          <div className="photo-upload-main">
+            <label className="photo-upload-field">Poids (kg)
+              <input type="number" inputMode="decimal" min="1" max="500" step="0.1" value={editWeight} onChange={event => setEditWeight(event.target.value)} placeholder="Ex. 80,4" required />
+            </label>
+            {editError && <p className="progress-photo-error" role="alert">{editError}</p>}
+          </div>
+          <div className="photo-upload-actions">
+            <button type="button" onClick={() => setEditingEntry(null)} disabled={savingWeight}>Annuler</button>
+            <button type="submit" disabled={savingWeight}>{savingWeight ? 'Enregistrement…' : 'Enregistrer le poids'}</button>
+          </div>
+        </form>
       </div>}
 
       {file && <div className="photo-upload-backdrop" onMouseDown={event => { if (event.target === event.currentTarget && !busy) setFile(null); }}>
