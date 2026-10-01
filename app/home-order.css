@@ -322,3 +322,37 @@
   .ref-photo-weight-point>strong{font-size:11px!important}
   .ref-photo-weight-delta{padding:7px 8px}
 }
+
+
+/* Restore the requested personalized greeting alongside the profile control. */
+.ref-home-header-minimal{
+  justify-content:space-between!important;
+  align-items:center!important;
+}
+.ref-home-header-minimal .ref-home-greeting{min-width:0}
+.ref-home-header-minimal .ref-home-greeting h1{
+  margin:0;
+  color:var(--ref-ink,#0d0d0d);
+  font-family:var(--athleo-serif,Georgia,serif);
+  font-size:clamp(34px,4vw,52px);
+  line-height:1;
+  letter-spacing:-1.7px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.ref-home-header-minimal .ref-home-greeting h1 span{color:var(--ref-red,#971e25)}
+@media(max-width:820px){
+  .ref-home-header-minimal{
+    justify-content:space-between!important;
+    align-items:center!important;
+    gap:10px;
+  }
+  .ref-home-header-minimal .ref-home-greeting h1{
+    font-size:clamp(28px,8vw,39px);
+    letter-spacing:-1.2px;
+  }
+}
+@media(max-width:360px){
+  .ref-home-header-minimal .ref-home-greeting h1{font-size:27px}
+}
