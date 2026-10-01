@@ -46,18 +46,32 @@
 .photo-upload-actions button{border-radius:10px;padding:11px 16px;font-size:13px;font-weight:700;cursor:pointer}
 .photo-upload-actions button:first-child{border:1px solid #ddcfc1;background:#fffaf4;color:#554b43}
 .photo-upload-actions button:disabled{opacity:.6;cursor:wait}
-.ref-photo-comparison{margin:26px 0 0;padding:22px;background:#fffdfa;border:1px solid #e7d9cb;border-radius:18px;box-shadow:0 10px 28px rgba(46,32,19,.06)}
-.ref-photo-comparison-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px}
-.ref-photo-comparison-heading h2{font-family:var(--athleo-serif);font-size:23px;margin:0}
-.ref-photo-comparison-heading p{margin:6px 0 0;color:#756b62;font-size:12px}
-.ref-photo-comparison-heading>span{padding:7px 10px;background:#f1e6da;border-radius:999px;color:#7b292a;font-size:11px;font-weight:700}
-.ref-photo-comparison-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.ref-photo-comparison-grid figure{position:relative;min-width:0;margin:0;overflow:hidden;border-radius:13px;background:#171412}
-.ref-photo-comparison-grid figure img{width:100%;aspect-ratio:4/3;display:block;object-fit:cover}
-.ref-photo-comparison-grid figcaption{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:26px 12px 11px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.76));font-size:11px}
-.ref-photo-comparison-grid figcaption span{font-weight:800}
-.ref-photo-next-step{min-height:100%;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:20px;border:1px dashed #cbb9a6;border-radius:13px;background:#f8f0e8}
-.ref-photo-next-step b{font-family:var(--athleo-serif);font-size:17px}
-.ref-photo-next-step span{color:#756b62;font-size:12px;line-height:1.5}
+.ref-home-header-minimal{min-height:0;justify-content:flex-end;padding:0 8px 12px}
+.ref-photo-comparison{margin:0 0 16px;padding:20px;background:linear-gradient(145deg,#75191f 0%,#3a1116 100%);border:1px solid rgba(255,255,255,.12);border-radius:20px;box-shadow:0 14px 34px rgba(50,15,20,.2);color:#fff}
+.ref-photo-comparison-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 15px}
+.ref-photo-comparison-heading h2{font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:26px;line-height:1;font-weight:800;letter-spacing:-.8px;margin:0}
+.ref-photo-comparison-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ref-photo-comparison-grid figure{position:relative;min-width:0;margin:0;overflow:hidden;border-radius:14px;background:#171412;box-shadow:0 6px 18px rgba(0,0,0,.2)}
+.ref-photo-comparison-grid figure img{width:100%;aspect-ratio:4/4.5;display:block;object-fit:cover}
+.ref-photo-comparison-grid figcaption{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:flex-start;align-items:center;gap:8px;padding:28px 10px 9px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.78));font-size:10px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.ref-photo-comparison-grid figcaption time{font-size:10px;line-height:1.2}
+.ref-photo-weight-progress{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:9px;margin-top:14px;padding:12px 14px;border:1px solid rgba(255,255,255,.15);border-radius:14px;background:rgba(15,8,9,.26)}
+.ref-photo-weight-point{display:flex;flex-direction:column;gap:3px}
+.ref-photo-weight-point:last-child{text-align:right;align-items:flex-end}
+.ref-photo-weight-point>span{color:#e9c9c8;font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase}
+.ref-photo-weight-point>strong{font-size:14px;font-weight:750}
+.ref-photo-weight-delta{padding:8px 10px;border-radius:999px;background:#f2d8a6;color:#3d2112;font-size:13px;font-weight:850;white-space:nowrap}
+.ref-photo-next-step{min-height:100%;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:20px;border:1px dashed rgba(255,255,255,.42);border-radius:14px;background:rgba(10,5,6,.2);color:#fff;text-align:left}
+.ref-photo-next-step b{font-size:15px}
+.ref-photo-next-step span{color:#f0dedd;font-size:12px;line-height:1.5}
+.ref-photo-empty{width:100%;min-height:140px;border:1px dashed rgba(255,255,255,.42);border-radius:14px;background:rgba(10,5,6,.2);color:#fff;text-align:left;padding:20px}
+.ref-photo-empty b{display:block;font-size:15px;margin-bottom:6px}
+.ref-photo-empty span{color:#f0dedd;font-size:12px;line-height:1.5}
+.ref-coach-cta{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0 0 4px;padding:17px 19px;border:1px solid #302324;border-radius:16px;background:linear-gradient(115deg,#171313,#211719);color:#fff}
+.ref-coach-cta-copy p{margin:0 0 5px;color:#dc7376;font-size:9px;font-weight:800;letter-spacing:2px}
+.ref-coach-cta-copy h2{margin:0;font-size:17px;letter-spacing:-.3px}
+.ref-coach-cta button{min-height:42px;display:flex;align-items:center;justify-content:center;gap:16px;padding:0 16px;border:0;border-radius:10px;background:#a8232b;color:#fff;font-size:12px;font-weight:750;cursor:pointer;white-space:nowrap;transition:background .16s,transform .16s}
+.ref-coach-cta button:hover{background:#c02d36;transform:translateY(-1px)}
+.ref-coach-cta button:focus-visible{outline:3px solid #f2d8a6;outline-offset:3px}
 @media(max-width:1000px){.progress-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.photo-measurements-fields>div{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:600px){.progress-photos-heading{align-items:flex-start;flex-direction:column}.progress-photo-add{width:100%}.progress-photo-grid{grid-template-columns:1fr}.progress-photo-drop{min-height:140px;padding:20px 14px}.photo-upload-backdrop{align-items:end;padding:0}.photo-upload-modal{max-height:94dvh;border-radius:20px 20px 0 0}.photo-upload-head{padding:20px 18px 16px}.photo-upload-main{padding:17px 18px 20px}.photo-upload-preview{height:150px}.photo-measurements-fields{padding:13px 10px}.photo-measurements-fields>div{grid-template-columns:1fr 1fr;gap:10px}.photo-upload-actions{padding:14px 18px 18px}.photo-upload-actions button{flex:1}.ref-photo-comparison{padding:16px;margin-top:22px}.ref-photo-comparison-heading h2{font-size:19px}.ref-photo-comparison-grid{gap:9px}.ref-photo-comparison-grid figure img{aspect-ratio:3/4}.ref-photo-comparison-grid figcaption{align-items:flex-start;flex-direction:column;gap:2px;padding:30px 9px 9px;font-size:10px}.ref-photo-next-step{padding:12px}.ref-photo-next-step b{font-size:14px}.ref-photo-next-step span{font-size:10px}}
+@media(max-width:600px){.progress-photos-heading{align-items:flex-start;flex-direction:column}.progress-photo-add{width:100%}.progress-photo-grid{grid-template-columns:1fr}.progress-photo-drop{min-height:140px;padding:20px 14px}.photo-upload-backdrop{align-items:end;padding:0}.photo-upload-modal{max-height:94dvh;border-radius:20px 20px 0 0}.photo-upload-head{padding:20px 18px 16px}.photo-upload-main{padding:17px 18px 20px}.photo-upload-preview{height:150px}.photo-measurements-fields{padding:13px 10px}.photo-measurements-fields>div{grid-template-columns:1fr 1fr;gap:10px}.photo-upload-actions{padding:14px 18px 18px}.photo-upload-actions button{flex:1}.ref-home-header-minimal{padding:0 2px 12px}.ref-photo-comparison{padding:15px;margin-bottom:13px;border-radius:17px}.ref-photo-comparison-heading{margin-bottom:12px}.ref-photo-comparison-heading h2{font-size:23px}.ref-photo-comparison-grid{gap:8px}.ref-photo-comparison-grid figure img{aspect-ratio:4/4.8}.ref-photo-comparison-grid figcaption{padding:25px 8px 8px;font-size:9px}.ref-photo-comparison-grid figcaption time{font-size:9px}.ref-photo-weight-progress{gap:5px;margin-top:10px;padding:10px 9px}.ref-photo-weight-point>span{font-size:8px}.ref-photo-weight-point>strong{font-size:12px}.ref-photo-weight-delta{padding:7px 8px;font-size:11px}.ref-photo-next-step{padding:12px}.ref-photo-next-step b{font-size:13px}.ref-photo-next-step span{font-size:10px}.ref-coach-cta{align-items:stretch;flex-direction:column;gap:13px;margin-bottom:0;padding:15px;border-radius:14px}.ref-coach-cta-copy h2{font-size:16px}.ref-coach-cta button{width:100%;justify-content:space-between}}
