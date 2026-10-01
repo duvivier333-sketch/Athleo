@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import ProgressPhotos from './ProgressPhotos';
+import AnnualProgress from './AnnualProgress';
 import { loadProgressPhotos, type ProgressPhotoEntry } from '../../lib/progressPhotos';
 
 type MainTab = 'evolution' | 'photos' | 'annual';
@@ -181,7 +182,7 @@ export default function ProgressionPage() {
       )}
 
       {tab === 'photos' && <ProgressPhotos />}
-      {tab === 'annual' && <section className="progress-card empty-progress"><div className="empty-icon">↗</div><h2>Parcours annuel</h2><p>Une vue synthétique de tes blocs, de ton poids et de tes principaux repères sur l’année.</p><div className="annual-strip">{['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sept','Oct','Nov','Déc'].map((month,i) => <span className={i < 9 ? 'done' : ''} key={month}>{month}</span>)}</div></section>}
+      {tab === 'annual' && <AnnualProgress entries={entries} loadingEntries={loadingEntries} onAddPhoto={() => setTab('photos')} />}
     </div>
   );
 }
