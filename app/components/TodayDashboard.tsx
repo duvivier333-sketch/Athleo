@@ -152,12 +152,8 @@ export default function TodayDashboard({
       </section>
 
       <section className="ref-coach-cta" aria-label="Discussion avec le coach">
-        <div className="ref-coach-cta-copy">
-          <p>COACH IA</p>
-          <h2>Un conseil pour la suite&nbsp;?</h2>
-        </div>
         <button type="button" onClick={() => onNavigate('coach')}>
-          Parler avec mon coach <span aria-hidden="true">→</span>
+          Parler au coach <span aria-hidden="true">→</span>
         </button>
       </section>
 
