@@ -163,7 +163,6 @@ export default function TodayDashboard({
           <PriorityCard icon="training" title="Entraînement" main="Upper B" foot="0 / 6 exercices" onClick={() => onNavigate('training')} />
           <PriorityCard icon="nutrition" title="Nutrition" main="2 104 / 2 800 kcal" foot="" progress={72} onClick={() => onNavigate('nutrition')} />
           <PriorityCard icon="progress" title="Progression" main="80,4 kg" delta="↓ -0,8 kg" foot="" onClick={() => onNavigate('progress')} />
-          <PriorityCard icon="coach" title="Coach IA" main="Faire mon bilan" foot="" onClick={() => onNavigate('coach')} />
         </div>
       </section>
 
