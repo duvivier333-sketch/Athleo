@@ -123,12 +123,16 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Ta session a expiré. Reconnecte-toi puis réessaie.' }, { status: 401 });
   }
 
-  let payload: { id?: unknown; weight_kg?: unknown };
+  let rawPayload: unknown;
   try {
-    payload = await request.json();
+    rawPayload = await request.json();
   } catch {
     return NextResponse.json({ error: 'Les informations du repère sont illisibles.' }, { status: 400 });
   }
+  if (typeof rawPayload !== 'object' || rawPayload === null || Array.isArray(rawPayload)) {
+    return NextResponse.json({ error: 'Les informations du repère sont invalides.' }, { status: 400 });
+  }
+  const payload = rawPayload as { id?: unknown; weight_kg?: unknown };
 
   const id = typeof payload.id === 'string' ? payload.id.trim() : '';
   if (!id || !Object.prototype.hasOwnProperty.call(payload, 'weight_kg')) {
